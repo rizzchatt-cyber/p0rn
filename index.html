@@ -581,6 +581,26 @@
       grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
       gap: 20px 16px;
     }
+    .home-top-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px 12px;
+      margin-bottom: 22px;
+    }
+    .home-top-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--cream-sub);
+      margin: 0 0 10px;
+    }
+    .home-lower-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--cream-dim);
+      margin: 4px 0 12px;
+    }
     .video-card {
       display: flex;
       flex-direction: column;
@@ -1962,9 +1982,268 @@
   /* Prefer same-origin proxy; auto-fallback to upstream if proxy missing */
   const PROXY = "/api/vod";
   const DIRECT = "https://xvidapi.com/api.php/provide/vod";
+  const EPORNER_API = "https://www.eporner.com/api/v2/video/search/";
+  const EPORNER_ID = "https://www.eporner.com/api/v2/video/id/";
+  const XXXTV_LATEST = "https://xxxtv.top/api/videos/latest";
+  const XXXTV_ONE = "https://xxxtv.top/api/videos/";
   const PAGE_SIZE = 24;
 
-  /* 50 curated categories — instant, no list API wait */
+  /* ONLY 3 sources — UI labels never expose vendor names
+     Server 1 = XVID | Server 2 = Eporner | Server 3 = XXXtv
+     XXXtv = HOME top (and rare feed) ONLY — never search/category/collection
+  */
+  const SERVER_LABELS = { "1": "Server 1", "2": "Server 2", "3": "Server 3" };
+  const SRC = { XVID: "1", EPORNER: "2", XXXTV: "3" };
+  /* Countries where Eporner must never be requested */
+  const EPORNER_BLOCKED = new Set(["IN", "CN", "RU", "UG", "AU", "PK", "BD", "NP", "LK"]);
+  const COUNTRY_HOME = {
+    IN: { label: "Indian", query: "indian", typeId: 41, catPriority: [41, 8, 49, 65, 10, 54] },
+    PK: { label: "Desi", query: "desi", typeId: 41, catPriority: [41, 8, 49, 54, 10, 65] },
+    BD: { label: "Desi", query: "desi", typeId: 41, catPriority: [41, 8, 49, 54, 65, 20] },
+    NP: { label: "Desi", query: "desi", typeId: 41, catPriority: [41, 8, 49, 65, 20, 18] },
+    LK: { label: "Desi", query: "desi", typeId: 41, catPriority: [41, 8, 49, 65, 20, 18] },
+    US: { label: "American", query: "american", typeId: null, catPriority: [8, 49, 65, 20, 53, 23] },
+    GB: { label: "British", query: "british", typeId: null, catPriority: [8, 49, 65, 53, 22, 20] },
+    CA: { label: "Canadian", query: "canadian", typeId: null, catPriority: [8, 49, 65, 20, 53, 18] },
+    BR: { label: "Brazilian", query: "brazilian", typeId: 44, catPriority: [44, 18, 20, 8, 49, 9] },
+    MX: { label: "Latina", query: "latina", typeId: 44, catPriority: [44, 18, 20, 8, 49, 9] },
+    ES: { label: "Spanish", query: "spanish", typeId: 44, catPriority: [44, 8, 49, 20, 18, 45] },
+    AR: { label: "Latina", query: "latina", typeId: 44, catPriority: [44, 18, 20, 8, 49, 9] },
+    CO: { label: "Latina", query: "latina", typeId: 44, catPriority: [44, 18, 20, 8, 49, 9] },
+    JP: { label: "Japanese", query: "japanese", typeId: 43, catPriority: [43, 11, 45, 65, 8, 53] },
+    KR: { label: "Korean", query: "korean", typeId: 11, catPriority: [11, 43, 65, 8, 45, 53] },
+    TH: { label: "Thai", query: "thai", typeId: 11, catPriority: [11, 43, 8, 65, 45, 49] },
+    PH: { label: "Filipina", query: "filipina", typeId: 11, catPriority: [11, 8, 65, 49, 20, 18] },
+    ID: { label: "Indonesian", query: "indonesian", typeId: 11, catPriority: [11, 8, 49, 65, 20, 18] },
+    VN: { label: "Asian", query: "asian", typeId: 11, catPriority: [11, 43, 8, 65, 45, 49] },
+    DE: { label: "German", query: "german", typeId: null, catPriority: [8, 49, 65, 16, 53, 20] },
+    FR: { label: "French", query: "french", typeId: null, catPriority: [8, 49, 45, 65, 53, 20] },
+    IT: { label: "Italian", query: "italian", typeId: null, catPriority: [8, 49, 20, 65, 53, 18] },
+    NL: { label: "Dutch", query: "dutch", typeId: null, catPriority: [8, 49, 65, 53, 45, 20] },
+    PL: { label: "Polish", query: "polish", typeId: null, catPriority: [8, 49, 65, 20, 53, 18] },
+    TR: { label: "Turkish", query: "turkish", typeId: 10, catPriority: [10, 8, 49, 20, 18, 65] },
+    SA: { label: "Arab", query: "arab", typeId: 10, catPriority: [10, 8, 49, 20, 18, 65] },
+    AE: { label: "Arab", query: "arab", typeId: 10, catPriority: [10, 8, 49, 20, 18, 65] },
+    EG: { label: "Arab", query: "arab", typeId: 10, catPriority: [10, 8, 49, 20, 18, 65] },
+    NG: { label: "African", query: "ebony", typeId: 21, catPriority: [21, 8, 49, 20, 18, 65] },
+    ZA: { label: "African", query: "ebony", typeId: 21, catPriority: [21, 8, 49, 20, 18, 65] },
+    KE: { label: "African", query: "ebony", typeId: 21, catPriority: [21, 8, 49, 20, 18, 65] },
+    CN: { label: "Asian", query: "asian", typeId: 11, catPriority: [11, 43, 8, 65, 45, 49] },
+    RU: { label: "Russian", query: "russian", typeId: null, catPriority: [8, 49, 22, 65, 20, 53] },
+    AU: { label: "Australian", query: "australian", typeId: null, catPriority: [8, 49, 65, 20, 53, 18] },
+    UG: { label: "African", query: "ebony", typeId: 21, catPriority: [21, 8, 49, 20, 18, 65] }
+  };
+
+  /* Country-specific hot keyword pills (Home category bar) */
+  const COUNTRY_KEYWORDS = {
+    IN: [
+      { label: "Desi Bhabhi", kw: "desi bhabhi" },
+      { label: "Bhabhi", kw: "bhabhi" },
+      { label: "Desi", kw: "desi" },
+      { label: "Aunty", kw: "aunty" },
+      { label: "Indian Hot", kw: "indian hot" },
+      { label: "Mallu", kw: "mallu" },
+      { label: "Hindi", kw: "hindi" }
+    ],
+    PK: [
+      { label: "Desi", kw: "desi" },
+      { label: "Bhabhi", kw: "bhabhi" },
+      { label: "Aunty", kw: "aunty" },
+      { label: "Urdu", kw: "urdu" }
+    ],
+    BD: [
+      { label: "Desi", kw: "desi" },
+      { label: "Bangla", kw: "bangla" },
+      { label: "Bhabhi", kw: "bhabhi" }
+    ],
+    US: [
+      { label: "Amateur", kw: "amateur" },
+      { label: "MILF", kw: "milf" },
+      { label: "Teen", kw: "teen" },
+      { label: "BBC", kw: "bbc" },
+      { label: "POV", kw: "pov" }
+    ],
+    GB: [
+      { label: "British", kw: "british" },
+      { label: "Amateur", kw: "amateur" },
+      { label: "MILF", kw: "milf" }
+    ],
+    BR: [
+      { label: "Brazilian", kw: "brazilian" },
+      { label: "Latina", kw: "latina" },
+      { label: "Big Ass", kw: "big ass" }
+    ],
+    MX: [
+      { label: "Latina", kw: "latina" },
+      { label: "Mexican", kw: "mexican" },
+      { label: "Big Ass", kw: "big ass" }
+    ],
+    JP: [
+      { label: "Japanese", kw: "japanese" },
+      { label: "JAV", kw: "jav" },
+      { label: "Asian", kw: "asian" }
+    ],
+    KR: [
+      { label: "Korean", kw: "korean" },
+      { label: "Asian", kw: "asian" }
+    ],
+    TH: [
+      { label: "Thai", kw: "thai" },
+      { label: "Asian", kw: "asian" }
+    ],
+    DE: [
+      { label: "German", kw: "german" },
+      { label: "Amateur", kw: "amateur" },
+      { label: "MILF", kw: "milf" }
+    ],
+    FR: [
+      { label: "French", kw: "french" },
+      { label: "Amateur", kw: "amateur" }
+    ],
+    TR: [
+      { label: "Turkish", kw: "turkish" },
+      { label: "Arab", kw: "arab" }
+    ],
+    SA: [
+      { label: "Arab", kw: "arab" },
+      { label: "Hijab", kw: "hijab" }
+    ],
+    AE: [
+      { label: "Arab", kw: "arab" },
+      { label: "Hijab", kw: "hijab" }
+    ],
+    EG: [
+      { label: "Arab", kw: "arab" },
+      { label: "Egyptian", kw: "egyptian" }
+    ],
+    NG: [
+      { label: "Ebony", kw: "ebony" },
+      { label: "African", kw: "african" }
+    ],
+    RU: [
+      { label: "Russian", kw: "russian" },
+      { label: "Amateur", kw: "amateur" },
+      { label: "MILF", kw: "milf" }
+    ],
+    CN: [
+      { label: "Asian", kw: "asian" },
+      { label: "Chinese", kw: "chinese" }
+    ],
+    AU: [
+      { label: "Australian", kw: "australian" },
+      { label: "Amateur", kw: "amateur" }
+    ]
+  };
+
+  let geo = {
+    country: "", isIndia: false, blocked: false, epornerOk: true,
+    home: null, ready: false, servers: ["1", "3"]
+  };
+  let useProxy = true;
+  let activeServer = "1"; // account preference only (does not break routing table)
+
+  function availableServers() {
+    // Always expose 1 + 3; 2 only when Eporner allowed
+    return geo.epornerOk ? ["1", "2", "3"] : ["1", "3"];
+  }
+
+  /**
+   * Exact routing table:
+   * section: homeTop | homeLower | feed | category | collection | search
+   * Returns primary source code "1"|"2"|"3"
+   */
+  function resolveServer(section) {
+    const ok = geo.epornerOk;
+    switch (section) {
+      case "homeTop":
+        return SRC.XXXTV; // always xxxtv on top of home
+      case "homeLower":
+      case "homeCategory":
+      case "homeCollection":
+        return ok ? SRC.EPORNER : SRC.XVID;
+      case "feed":
+        // occasionally xxxtv is handled in fetchFeed; primary is Eporner or XVID
+        return ok ? SRC.EPORNER : SRC.XVID;
+      case "category":
+      case "collection":
+        return ok ? SRC.EPORNER : SRC.XVID;
+      case "search":
+        return ok ? SRC.EPORNER : SRC.XVID;
+      default:
+        return SRC.XVID;
+    }
+  }
+
+  function dedupeKey(v) {
+    return (v._source || "1") + ":" + String(v.id);
+  }
+
+  function dedupeList(list, seen) {
+    const out = [];
+    const s = seen || new Set();
+    for (const v of list || []) {
+      const k = dedupeKey(v);
+      if (s.has(k)) continue;
+      s.add(k);
+      out.push(v);
+    }
+    return out;
+  }
+
+  async function detectGeo() {
+    try {
+      let data = null;
+      try {
+        const r = await fetch("/api/geo", { credentials: "same-origin", cache: "no-store" });
+        if (r.ok) data = await r.json();
+      } catch (_) {}
+      if (!data) {
+        try {
+          const r2 = await fetch("https://ipapi.co/json/", { cache: "no-store" });
+          if (r2.ok) data = await r2.json();
+        } catch (_) {}
+      }
+      if (!data) {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+        data = { country_code: /Kolkata|Calcutta|India/i.test(tz) ? "IN" : "" };
+      }
+      const code = (data.country_code || data.countryCode || data.country || "").toUpperCase();
+      geo.country = code;
+      geo.isIndia = code === "IN";
+      geo.blocked = EPORNER_BLOCKED.has(code);
+      geo.epornerOk = !geo.blocked;
+      geo.home = COUNTRY_HOME[code] || null;
+      geo.servers = availableServers();
+
+      const saved = localStorage.getItem("p0rn_server");
+      if (saved && geo.servers.includes(saved)) activeServer = saved;
+      else activeServer = geo.epornerOk ? SRC.EPORNER : SRC.XVID;
+      geo.source = activeServer;
+    } catch (e) {
+      console.warn("geo detect fail", e);
+      activeServer = SRC.XVID;
+      geo.source = SRC.XVID;
+      geo.epornerOk = false;
+      geo.blocked = true;
+      geo.servers = ["1", "3"];
+    }
+    geo.ready = true;
+    return geo;
+  }
+
+  function setApiSource(server) {
+    const s = String(server);
+    if (!availableServers().includes(s)) return;
+    activeServer = s;
+    geo.source = s;
+    localStorage.setItem("p0rn_server", s);
+  }
+
+  function serverLabel(s) {
+    return SERVER_LABELS[s || activeServer] || "Server 1";
+  }
+
+  /* 50 curated categories — instant, no list API wait (XVIDAPI type ids) */
   const BUILTIN_CATEGORIES = [
     { id: 41, name: "Indian" },
     { id: 8, name: "Amateur" },
@@ -2017,11 +2296,23 @@
     { id: 69, name: "Workout" },
     { id: 12, name: "ASMR" }
   ];
-  let useProxy = true;
+
+  /* Eporner keyword map for category pills when source = eporner */
+  const EPORNER_CAT_QUERY = {
+    41: "indian", 8: "amateur", 65: "teen", 49: "milf", 44: "latina",
+    11: "asian", 43: "japanese", 45: "lesbian", 9: "anal", 20: "big tits",
+    23: "blowjob", 27: "creampie", 53: "pornstar", 30: "exotic", 42: "interracial",
+    37: "gangbang", 15: "bbw", 10: "arab", 54: "amateur", 26: "webcam",
+    16: "bdsm", 18: "big ass", 19: "big cock", 22: "blonde", 24: "brunette",
+    29: "cumshot", 31: "facial", 34: "femdom", 47: "massage", 48: "mature",
+    51: "orgy", 62: "squirting", 63: "stockings", 64: "swingers", 68: "vr",
+    7: "ai", 13: "ass", 21: "ebony", 28: "cuckold", 38: "gape",
+    40: "heels", 46: "lingerie", 50: "oiled", 55: "redhead", 58: "sexy",
+    60: "shemale", 61: "solo", 66: "cartoon", 69: "workout", 12: "asmr"
+  };
 
   async function apiFetch(params = {}) {
     const q = new URLSearchParams({ at: "json", pagesize: String(PAGE_SIZE), ...params });
-    // single video by id doesn't need pagesize
     if (params.ids) q.delete("pagesize");
     if (params.ac === "list") q.delete("pagesize");
 
@@ -2046,6 +2337,142 @@
       }
     }
     return await hit(DIRECT);
+  }
+
+  function normalizeEporner(v) {
+    const thumb = (v.default_thumb && v.default_thumb.src) ||
+      (v.thumbs && v.thumbs[0] && v.thumbs[0].src) || "";
+    return {
+      id: "ep_" + v.id,
+      _epId: v.id,
+      title: (v.title || "Untitled").replace(/&amp;/g, "&"),
+      duration: v.length_min || "—",
+      category: (v.keywords || "").split(",")[0] || "Video",
+      catSlug: "s2",
+      typeId: null,
+      views: v.views || 0,
+      ago: formatAgo(v.added),
+      thumbnail: thumb,
+      poster: thumb,
+      embed: v.embed || ("https://www.eporner.com/embed/" + v.id + "/"),
+      actors: [],
+      quality: "",
+      year: "",
+      tags: (v.keywords || "").split(",").map(t => t.trim()).filter(Boolean),
+      _source: "2"
+    };
+  }
+
+  function formatSec(sec) {
+    sec = Number(sec) || 0;
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return m + ":" + String(s).padStart(2, "0");
+  }
+
+  function normalizeXxxtv(v) {
+    return {
+      id: "xt_" + v.id,
+      _xtId: v.id,
+      title: (v.title || "Untitled").replace(/&amp;/g, "&"),
+      duration: formatSec(v.duration),
+      category: "Video",
+      catSlug: "s3",
+      typeId: null,
+      views: v.views || 0,
+      ago: formatAgo(v.createdAt),
+      thumbnail: v.thumbnail || "",
+      poster: v.thumbnail || "",
+      preview: v.preview || "",
+      embed: v.embedUrl || ("https://xxxtv.top/embed/" + v.id),
+      actors: [],
+      quality: "",
+      year: "",
+      tags: [],
+      _source: "3"
+    };
+  }
+
+  async function epornerSearch({ query = "all", page = 1, order = "latest", perPage = PAGE_SIZE } = {}) {
+    const q = new URLSearchParams({
+      query: query || "all",
+      per_page: String(perPage),
+      page: String(page),
+      thumbsize: "big",
+      order,
+      format: "json",
+      gay: "0",
+      lq: "1"
+    });
+    const res = await fetch(EPORNER_API + "?" + q.toString());
+    if (!res.ok) throw new Error("S2 " + res.status);
+    const data = await res.json();
+    const list = (data.videos || []).map(normalizeEporner);
+    return {
+      list,
+      page: data.page || page,
+      pagecount: data.total_pages || 1,
+      total: data.total_count || list.length
+    };
+  }
+
+  async function epornerById(id) {
+    const pure = String(id).replace(/^ep_/, "");
+    const q = new URLSearchParams({ id: pure, thumbsize: "big", format: "json" });
+    const res = await fetch(EPORNER_ID + "?" + q.toString());
+    if (!res.ok) throw new Error("S2 id " + res.status);
+    const data = await res.json();
+    const raw = data.video || data;
+    if (!raw || !raw.id) throw new Error("not found");
+    return normalizeEporner(raw);
+  }
+
+  /* XXXtv cache — API is slower; keep recent pages in memory */
+  const xtCache = new Map();
+  async function xxxtvLatest({ page = 1, limit = PAGE_SIZE, keyword = null } = {}) {
+    const key = page + ":" + limit;
+    let data = xtCache.get(key);
+    if (!data) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 18000);
+      try {
+        const res = await fetch(XXXTV_LATEST + "?limit=" + limit + "&page=" + page, {
+          signal: ctrl.signal,
+          headers: { Accept: "application/json" }
+        });
+        if (!res.ok) throw new Error("S3 " + res.status);
+        data = await res.json();
+        if (!data.success) throw new Error("S3 fail");
+        xtCache.set(key, data);
+        if (xtCache.size > 40) xtCache.delete(xtCache.keys().next().value);
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+    let list = (data.data || []).map(normalizeXxxtv);
+    if (keyword) {
+      const terms = String(keyword).toLowerCase().split(/\s+/).filter(Boolean);
+      list = list.filter(v => {
+        const hay = (v.title || "").toLowerCase();
+        return terms.every(t => hay.includes(t));
+      });
+    }
+    return {
+      list,
+      page: data.page || page,
+      pagecount: data.totalPages || 1,
+      total: data.totalVideos || list.length
+    };
+  }
+
+  async function xxxtvById(id) {
+    const pure = String(id).replace(/^xt_/, "");
+    const res = await fetch(XXXTV_ONE + encodeURIComponent(pure));
+    if (!res.ok) throw new Error("S3 id " + res.status);
+    const data = await res.json();
+    const raw = data.data || data;
+    if (!raw || !raw.id) throw new Error("not found");
+    return normalizeXxxtv(raw);
   }
 
   function normalizeVideo(raw) {
@@ -2077,7 +2504,8 @@
       actors: Array.isArray(raw.actor) ? raw.actor.filter(a => a && a !== "Updating") : [],
       quality: raw.quality || "",
       year: raw.year || "",
-      tags: (raw.tag || "").split(",").map(t => t.trim()).filter(Boolean)
+      tags: (raw.tag || "").split(",").map(t => t.trim()).filter(Boolean),
+      _source: "1"
     };
   }
 
@@ -2132,8 +2560,14 @@
       this.restoreDefaultMetadata();
 
       try {
+        await detectGeo();
         await this.loadCategories();
+        // Localized home for detected country (e.g. Indian first, Latina for MX, etc.)
+        this.activeCat = "all";
+        this._localeHome = !!geo.home;
         this.renderCategoryBar();
+
+        window.addEventListener("hashchange", () => this.applyHashRoute());
 
         const params = new URLSearchParams(window.location.search);
         const vId = params.get("v") || params.get("video");
@@ -2144,7 +2578,7 @@
           this.renderNav();
           // Seed history with home entry so pressing phone back button does not exit the website
           try {
-            history.replaceState({ page: "home" }, "p0rn", window.location.pathname);
+            history.replaceState({ page: "home" }, "p0rn", window.location.pathname + "#home");
             history.pushState({ videoId: vId }, "", `${window.location.pathname}?v=${vId}`);
           } catch (_) {}
           await this.loadAndRenderHome();
@@ -2153,17 +2587,26 @@
           this.tab = "category";
           this.renderNav();
           try {
-            history.replaceState({ page: "categories" }, "Collections", `${window.location.pathname}?tab=category`);
+            history.replaceState({ page: "categories" }, "Collections", `${window.location.pathname}#collections`);
             history.pushState({ colId: colId }, "", `${window.location.pathname}?collection=${colId}`);
           } catch (_) {}
           await this.openCategoryHub(colId, false);
         } else {
-          try {
-            if (!history.state) {
-              history.replaceState({ page: "home" }, "p0rn", window.location.pathname);
-            }
-          } catch (_) {}
-          this.navigate("home");
+          const h = (location.hash || "").toLowerCase();
+          if (h === "#collections" || h === "#category") {
+            this.navigate("category", false);
+          } else if (h === "#history") {
+            this.navigate("history", false);
+          } else if (h === "#account" || h === "#settings") {
+            this.navigate("account", false);
+          } else {
+            try {
+              if (!history.state) {
+                history.replaceState({ page: "home" }, "p0rn", window.location.pathname + "#home");
+              }
+            } catch (_) {}
+            this.navigate("home");
+          }
         }
       } catch (e) {
         console.error(e);
@@ -2198,8 +2641,8 @@
     }
 
     async loadCategories() {
-      // Instant from code — no list API
-      this.categories = BUILTIN_CATEGORIES.map(c => ({
+      // Instant from code — reorder by country priority for Home + Collections
+      let cats = BUILTIN_CATEGORIES.map(c => ({
         id: c.id,
         slug: String(c.id),
         name: c.name,
@@ -2207,6 +2650,16 @@
         thumb: null,
         loadingMeta: false
       }));
+      const pri = geo.home && geo.home.catPriority;
+      if (pri && pri.length) {
+        const rank = new Map(pri.map((id, i) => [String(id), i]));
+        cats.sort((a, b) => {
+          const ra = rank.has(String(a.id)) ? rank.get(String(a.id)) : 999;
+          const rb = rank.has(String(b.id)) ? rank.get(String(b.id)) : 999;
+          return ra - rb;
+        });
+      }
+      this.categories = cats;
     }
 
     async enrichCategoryMeta(cat) {
@@ -2276,21 +2729,131 @@
       }
     }
 
-    async fetchVideos({ page = 1, typeId = null, keyword = null } = {}) {
+    /** Core fetch — section drives source. XXXtv NEVER for search/category/collection. */
+    async fetchVideos({ page = 1, typeId = null, keyword = null, section = "feed" } = {}) {
+      // HARD RULE: never call xxxtv for search / category / collection
+      const forbiddenXt = section === "search" || section === "category" || section === "collection"
+        || section === "homeCategory" || section === "homeCollection";
+      let server = resolveServer(section);
+      if (forbiddenXt && server === SRC.XXXTV) {
+        server = geo.epornerOk ? SRC.EPORNER : SRC.XVID;
+      }
+      // Never request Eporner when blocked
+      if (server === SRC.EPORNER && !geo.epornerOk) server = SRC.XVID;
+
+      const countryQ = (geo.home && geo.home.query) || "";
+
+      // --- XXXtv (home top / rare feed only) — no keyword/search API ---
+      if (server === SRC.XXXTV) {
+        try {
+          return await xxxtvLatest({ page, limit: PAGE_SIZE, keyword: null });
+        } catch (e) {
+          console.warn("XXXtv fail → XVID", e.message);
+          server = SRC.XVID;
+        }
+      }
+
+      // --- Eporner ---
+      if (server === SRC.EPORNER && geo.epornerOk) {
+        try {
+          let q = keyword || "all";
+          if (typeId && typeId !== "all" && EPORNER_CAT_QUERY[typeId]) {
+            q = EPORNER_CAT_QUERY[typeId];
+          } else if ((!keyword || keyword === "all") && countryQ && section !== "search") {
+            // country-aware default
+            q = countryQ;
+          }
+          return await epornerSearch({ query: q, page, order: "latest", perPage: PAGE_SIZE });
+        } catch (e) {
+          console.warn("Eporner fail → XVID", e.message);
+          server = SRC.XVID;
+        }
+      }
+
+      // --- XVID fallback / primary when blocked ---
       const params = { ac: "detail", pg: String(page), pagesize: String(PAGE_SIZE) };
       if (typeId && typeId !== "all") params.t = String(typeId);
       if (keyword) params.wd = keyword;
+      else if (countryQ && !typeId && section !== "search") params.wd = countryQ;
       const data = await apiFetch(params);
       let list = (data.list || []).map(normalizeVideo).filter(v => v.id);
-      // safety cap if upstream ignores pagesize
       if (list.length > PAGE_SIZE) list = list.slice(0, PAGE_SIZE);
-      const pagecount = Number(data.pagecount) || 1;
       return {
         list,
         page: Number(data.page) || page,
-        pagecount,
+        pagecount: Number(data.pagecount) || 1,
         total: Number(data.total) || list.length
       };
+    }
+
+    /** Home: top row = XXXtv, lower = Eporner (if OK) else XVID + country strip */
+    async fetchHomeBundle() {
+      const seen = new Set();
+      let top = [];
+      let lower = [];
+      let pagecount = 1;
+      let total = 0;
+
+      // Top row — XXXtv (required on home in BOTH modes)
+      try {
+        const xt = await xxxtvLatest({ page: 1, limit: 12, keyword: null });
+        top = dedupeList(xt.list || [], seen);
+      } catch (e) {
+        console.warn("home top XXXtv fail", e.message);
+      }
+
+      // Lower rows — Eporner or XVID, country-aware
+      const home = geo.home;
+      try {
+        if (geo.epornerOk) {
+          const q = (home && home.query) || "all";
+          const ep = await epornerSearch({ query: q, page: 1, order: "latest", perPage: PAGE_SIZE });
+          lower = dedupeList(ep.list || [], seen);
+          pagecount = ep.pagecount || 1;
+          total = ep.total || lower.length;
+          // XVID filler if thin
+          if (lower.length < 8) {
+            const xv = await this.fetchVideos({
+              page: 1,
+              typeId: home && home.typeId ? home.typeId : null,
+              keyword: home && !home.typeId ? home.query : null,
+              section: "homeLower"
+            });
+            // force XVID path already via section when eporner ok uses eporner first — call XVID directly
+            const params = { ac: "detail", pg: "1", pagesize: String(PAGE_SIZE) };
+            if (home && home.typeId) params.t = String(home.typeId);
+            else if (home && home.query) params.wd = home.query;
+            try {
+              const data = await apiFetch(params);
+              const extra = (data.list || []).map(normalizeVideo).filter(v => v.id);
+              lower = lower.concat(dedupeList(extra, seen));
+            } catch (_) {}
+          }
+        } else {
+          // EPORNER_BLOCKED: XVID only below XXXtv
+          const local = await this.fetchVideos({
+            page: 1,
+            typeId: home && home.typeId ? home.typeId : null,
+            keyword: home && !home.typeId ? home.query : null,
+            section: "homeLower"
+          });
+          lower = dedupeList(local.list || [], seen);
+          pagecount = local.pagecount || 1;
+          total = local.total || lower.length;
+        }
+      } catch (e) {
+        console.warn("home lower fail", e.message);
+      }
+
+      // Never empty: if top failed, lower may still show; if both empty try raw XVID
+      if (!top.length && !lower.length) {
+        const fb = await this.fetchVideos({ page: 1, section: "homeLower" });
+        lower = fb.list || [];
+        pagecount = fb.pagecount || 1;
+        total = fb.total || lower.length;
+      }
+
+      return { top, lower, pagecount, total, seen };
     }
 
     /* Theme */
@@ -2453,30 +3016,19 @@
       }
       bar.style.display = "flex";
 
-      // Top: Desi / Bhabhi style keyword pills (search API)
-      const hotKeywords = [
-        { label: "Desi Bhabhi", kw: "desi bhabhi" },
-        { label: "Bhabhi", kw: "bhabhi" },
-        { label: "Desi", kw: "desi" },
-        { label: "Aunty", kw: "aunty" },
-        { label: "Indian Hot", kw: "indian hot" },
-        { label: "Mallu", kw: "mallu" },
-        { label: "Hindi", kw: "hindi" }
-      ];
+      // Country-specific hot keyword pills (IP-based)
+      const hotKeywords = (geo.country && COUNTRY_KEYWORDS[geo.country])
+        || (geo.isIndia ? COUNTRY_KEYWORDS.IN : null)
+        || [
+          { label: "Amateur", kw: "amateur" },
+          { label: "MILF", kw: "milf" },
+          { label: "Teen", kw: "teen" },
+          { label: "POV", kw: "pov" }
+        ];
 
-      // Then viral API categories
-      const popular = [
-        "Indian", "Amateur", "Teen", "MILF", "Latina", "Asian Woman", "Japanese",
-        "Lesbian", "Anal", "Big Tits", "Exotic", "Interracial", "Pornstar",
-        "Real Amateur", "Blowjob", "Creampie", "Gangbang", "Virtual Reality", "AI", "Cam Porn"
-      ];
+      // Categories already sorted by country priority in loadCategories
       const barCats = [];
       const seen = new Set();
-      popular.forEach(name => {
-        const c = this.categories.find(x => x.name === name);
-        if (c && !seen.has(c.id)) { barCats.push(c); seen.add(c.id); }
-      });
-      // More categories further down the bar
       this.categories.forEach(c => {
         if (barCats.length >= 28) return;
         if (!seen.has(c.id)) { barCats.push(c); seen.add(c.id); }
@@ -2555,9 +3107,9 @@
       if (cat) this.toast(`Browsing ${cat.name}`);
     }
 
-    navigate(tab) {
+    navigate(tab, updateHash = true) {
       // If clicking Home from within Home when a category was active, reset to All
-      if (tab === "home" && this.tab === "home" && this.activeCat !== "all") {
+      if (tab === "home" && this.tab === "home" && this.activeCat !== "all" && !this.query) {
         this.filterCategory("all");
         window.scrollTo({ top: 0, behavior: "smooth" });
         return;
@@ -2569,12 +3121,35 @@
       this.renderCategoryBar();
       window.scrollTo({ top: 0, behavior: "smooth" });
 
-      if (tab === "home") this.loadAndRenderHome();
-      else if (tab === "category") {
-        this.renderCategories(false);
+      // Distinct hash URLs so Home / Collections can index separately
+      if (updateHash) {
+        try {
+          const hashMap = { home: "#home", category: "#collections", history: "#history", account: "#account" };
+          const h = hashMap[tab] || "#home";
+          if (location.hash !== h) history.replaceState(null, "", h);
+        } catch (_) {}
       }
+
+      if (tab === "home") this.loadAndRenderHome();
+      else if (tab === "category") this.renderCategories(false);
       else if (tab === "history") this.renderHistory();
       else if (tab === "account") this.renderAccount();
+    }
+
+    applyHashRoute() {
+      const h = (location.hash || "").toLowerCase();
+      if (h === "#collections" || h === "#category" || h === "#collection") {
+        this.navigate("category", false);
+      } else if (h === "#history") {
+        this.navigate("history", false);
+      } else if (h === "#account" || h === "#settings") {
+        this.navigate("account", false);
+      } else if (h === "#home" || h === "" || h === "#") {
+        // keep home; only force if not already loading video
+        if (!new URLSearchParams(location.search).get("v")) {
+          this.tab = "home";
+        }
+      }
     }
 
     bindSearch() {
@@ -2659,7 +3234,7 @@
         img = `<img src="${this.esc(src)}" alt="${this.esc(v.title)}" loading="${eager ? "eager" : "lazy"}" decoding="async" fetchpriority="${prio}" class="lq" data-hi="${this.esc(dataHi)}" onload="app.onImgProgress(this)" onerror="this.style.display='none'" />`;
       }
       return `
-        <a href="?v=${v.id}" class="video-card" data-video-id="${v.id}" data-duration="${this.esc(v.duration)}" data-embed="${this.esc(v.embed || '')}" data-thumb="${this.esc(hi)}" onclick="app.onCardClick(${v.id}, event)" onmouseenter="app.onCardHover(this, event)" onmousemove="app.onCardMove(this, event)" onmouseleave="app.onCardLeave(this, event)">
+        <a href="?v=${this.esc(v.id)}" class="video-card" data-video-id="${this.esc(v.id)}" data-duration="${this.esc(v.duration)}" data-embed="${this.esc(v.embed || '')}" data-preview="${this.esc(v.preview || '')}" data-thumb="${this.esc(hi)}" onclick="app.onCardClick('${this.esc(v.id)}', event)" onmouseenter="app.onCardHover(this, event)" onmousemove="app.onCardMove(this, event)" onmouseleave="app.onCardLeave(this, event)">
           <div class="thumb-wrap">
             ${img}
             <canvas class="preview-canvas"></canvas>
@@ -2854,7 +3429,20 @@
 
     mountPreviewEmbed(card) {
       const holder = card.querySelector(".preview-embed-holder");
-      if (!holder || holder.querySelector("iframe")) return;
+      if (!holder || holder.querySelector("iframe") || holder.querySelector("video")) return;
+      // Prefer short MP4 preview (Server 3) — faster than iframe
+      const mp4 = card.dataset.preview;
+      if (mp4) {
+        holder.innerHTML = `<video src="${this.esc(mp4)}" muted autoplay playsinline loop style="width:100%;height:100%;object-fit:cover;"></video>`;
+        holder.classList.add("active");
+        card._embedLoaded = true;
+        // Cap live preview at ~5s then pause
+        setTimeout(() => {
+          const vid = holder.querySelector("video");
+          if (vid) try { vid.pause(); } catch (_) {}
+        }, 5000);
+        return;
+      }
       const embed = card.dataset.embed;
       if (!embed) return;
       const sep = embed.includes("?") ? "&" : "?";
@@ -2961,23 +3549,35 @@
         }
 
         let page = this.page;
-        const result = await this.fetchVideos({
-          page,
-          typeId,
-          keyword
-        });
+        const isHomeAll = !keyword && (!typeId || typeId === "all");
 
-        if (append) {
-          const ids = new Set(this.videos.map(v => v.id));
-          result.list.forEach(v => {
-            if (!ids.has(v.id)) this.videos.push(v);
-          });
+        if (!append && page === 1 && isHomeAll) {
+          // Full home: XXXtv top + Eporner/XVID lower (country-aware)
+          const bundle = await this.fetchHomeBundle();
+          this.homeTop = bundle.top || [];
+          this.videos = bundle.lower || [];
+          this._seenKeys = bundle.seen || new Set();
+          this.pagecount = bundle.pagecount || 1;
+          this.total = (bundle.top.length || 0) + (bundle.total || this.videos.length);
+        } else if (append) {
+          // Infinite scroll on lower grid only — never XXXtv
+          const section = keyword ? "search" : (typeId ? "category" : "homeLower");
+          const result = await this.fetchVideos({ page, typeId, keyword, section });
+          const seen = this._seenKeys || new Set();
+          const fresh = dedupeList(result.list || [], seen);
+          this._seenKeys = seen;
+          this.videos.push(...fresh);
+          this.pagecount = result.pagecount || this.pagecount;
         } else {
-          // Home All = latest/viral order from API (page 1 first)
-          this.videos = result.list;
+          // Category pill or search from home — NEVER XXXtv
+          const section = keyword ? "search" : "category";
+          const result = await this.fetchVideos({ page, typeId, keyword, section });
+          this.homeTop = [];
+          this.videos = result.list || [];
+          this._seenKeys = new Set(this.videos.map(dedupeKey));
+          this.pagecount = result.pagecount || 1;
+          this.total = result.total || this.videos.length;
         }
-        this.pagecount = result.pagecount;
-        this.total = result.total;
         this.renderHome();
       } catch (e) {
         console.error(e);
@@ -2996,7 +3596,7 @@
         : (this.query
           ? "Search Results"
           : (this.activeCat === "all"
-              ? "Mixed Feed"
+              ? (geo.home && this._localeHome ? `${geo.home.label} + Mixed` : "Mixed Feed")
               : (this.categories.find(c => String(c.id) === String(this.activeCat))?.name || "Category")));
 
       let html = `
@@ -3018,7 +3618,13 @@
         </div>
       `;
 
-      if (!list.length) {
+      const top = (!this.query && this.activeCat === "all" && this.homeTop && this.homeTop.length) ? this.homeTop : [];
+      if (top.length) {
+        html += `<p class="home-top-label">Top picks</p>`;
+        html += `<div class="home-top-row" id="homeTopRow">${top.map((v,i) => this.card(v,i)).join("")}</div>`;
+      }
+
+      if (!list.length && !top.length) {
         html += `
           <div class="empty-box">
             <h3>No videos found</h3>
@@ -3026,7 +3632,8 @@
             <button class="ctrl-btn solid" onclick="app.clearSearch()">Reset</button>
           </div>
         `;
-      } else {
+      } else if (list.length) {
+        if (top.length) html += `<p class="home-lower-label">${geo.epornerOk ? "For you" : (geo.home ? geo.home.label + " feed" : "More videos")}</p>`;
         html += `<div class="videos-grid" id="videosGrid">${list.map((v,i) => this.card(v,i)).join("")}</div>`;
         if (this.page < this.pagecount) {
           html += `<div class="scroll-sentinel" id="scrollSentinel"></div>
@@ -3043,7 +3650,8 @@
         const next = this.page + 1;
         const typeId = (this.activeCat && this.activeCat !== "all" && !String(this.activeCat).startsWith("kw:")) ? this.activeCat : null;
         const keyword = this.query || (String(this.activeCat || "").startsWith("kw:") ? String(this.activeCat).slice(3) : null);
-        this.fetchVideos({ page: next, typeId, keyword }).then(r => {
+        const pctx = keyword ? "search" : (typeId ? "category" : "homeLower");
+        this.fetchVideos({ page: next, typeId, keyword, section: pctx }).then(r => {
           this._prefetch = { page: next, list: r.list, pagecount: r.pagecount };
         }).catch(() => {}).finally(() => { this._preloading = false; });
       }
@@ -3083,7 +3691,8 @@
           result = this._prefetch;
           this._prefetch = null;
         } else {
-          result = await this.fetchVideos({ page: this.page, typeId, keyword });
+          const mctx = this.selectedCat ? "collection" : (keyword ? "search" : (typeId ? "category" : "homeLower"));
+          result = await this.fetchVideos({ page: this.page, typeId, keyword, section: mctx });
         }
         const ids = new Set(this.videos.map(v => v.id));
         const fresh = (result.list || []).filter(v => !ids.has(v.id));
@@ -3223,7 +3832,7 @@
       this.updateCollectionMetadata(cat);
 
       try {
-        const result = await this.fetchVideos({ page: 1, typeId: cat.id });
+        const result = await this.fetchVideos({ page: 1, typeId: cat.id, section: "collection" });
         this.videos = result.list;
         this.pagecount = result.pagecount;
         this.total = result.total;
@@ -3410,25 +4019,52 @@
     renderAccount() {
       document.getElementById("categoryBar").style.display = "none";
       const main = document.getElementById("mainContainer");
+      const src = activeServer;
+      const blockedNote = geo.blocked
+        ? "Server 2 is restricted in your country — Server 1 is recommended."
+        : "All servers available in your region.";
 
       main.innerHTML = `
         <div class="account-hub-container">
-          <div class="coming-soon-pill">COMING SOON</div>
+          <div class="coming-soon-pill">SETTINGS</div>
           <div class="avatar-ring">
             <span class="icon">
               <svg width="28" height="28" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             </span>
           </div>
-          <h2 class="hub-title">Account & Profile Hub</h2>
-          <p class="hub-desc">Accounts, personal playlists, watch-later and creator tools are on the way.<br>Everything you watch is already remembered locally. Powered by XVIDAPI.</p>
-          <div class="features-grid">
+          <h2 class="hub-title">Account & Settings</h2>
+          <p class="hub-desc">Region: <b>${this.esc(geo.country || "Detecting…")}</b>
+            ${geo.home ? ` · Home focus: <b>${this.esc(geo.home.label)}</b>` : ""}
+            <br>${this.esc(blockedNote)}
+            <br>History & likes are saved on this device.</p>
+
+          <div class="features-grid" style="margin-bottom:18px;">
+            <div class="feature-card" style="grid-column:1/-1;">
+              <div class="feature-icon-box">
+                <svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+              </div>
+              <div class="feature-text" style="flex:1;">
+                <h4>Video server</h4>
+                <p style="margin-bottom:10px;">
+                  Home top = Server 3. Categories / search =
+                  ${geo.epornerOk ? "Server 2 (Server 1 fallback)" : "Server 1 only"}.
+                  ${geo.blocked ? " Server 2 blocked in your region." : ""}
+                </p>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+                  ${(geo.servers || availableServers()).map(s =>
+                    `<button class="ctrl-btn ${src === s ? "solid" : ""}" onclick="app.switchApiSource('${s}')" type="button">${SERVER_LABELS[s]}</button>`
+                  ).join("")}
+                  <span class="switch-status-text" style="margin-left:4px;">Pref: ${this.esc(serverLabel())}</span>
+                </div>
+              </div>
+            </div>
             <div class="feature-card">
               <div class="feature-icon-box">
                 <svg width="20" height="20" viewBox="0 0 24 24"><path d="M4 11h5V5H4v6zm0 7h5v-6H4v6zm6 0h5v-6h-5v6zm6 0h5v-6h-5v6zm-6-7h5V5h-5v6zm6-6v6h5V5h-5z"/></svg>
               </div>
               <div class="feature-text">
                 <h4>Custom Playlists</h4>
-                <p>Curate your own collections</p>
+                <p>Coming soon</p>
               </div>
             </div>
             <div class="feature-card">
@@ -3446,7 +4082,7 @@
               </div>
               <div class="feature-text">
                 <h4>Likes & Saved</h4>
-                <p>Keep your favourites handy</p>
+                <p>Keep favourites handy</p>
               </div>
             </div>
             <div class="feature-card">
@@ -3482,6 +4118,15 @@
       `;
     }
 
+    switchApiSource(source) {
+      setApiSource(source);
+      this.toast("Server preference: " + serverLabel(source));
+      this.page = 1;
+      this.videos = [];
+      this.renderAccount();
+      this._localeHome = !!geo.home;
+    }
+
     /* PLAYER */
     async playVideo(id, updateUrl = true) {
       let v = this.videos.find(x => String(x.id) === String(id))
@@ -3500,9 +4145,15 @@
           this.showLoading("Loading video…");
         }
         try {
-          const data = await apiFetch({ ac: "detail", ids: String(id) });
-          if (data.list && data.list[0]) {
-            v = normalizeVideo(data.list[0]);
+          if (String(id).startsWith("ep_") || (v && v._source === "2")) {
+            v = await epornerById(id);
+          } else if (String(id).startsWith("xt_") || (v && v._source === "3")) {
+            v = await xxxtvById(id);
+          } else {
+            const data = await apiFetch({ ac: "detail", ids: String(id) });
+            if (data.list && data.list[0]) {
+              v = normalizeVideo(data.list[0]);
+            }
           }
         } catch (e) {
           console.error(e);
@@ -3647,13 +4298,12 @@
       try {
         let result;
         if (v.typeId) {
-          result = await this.fetchVideos({ page: 1, typeId: v.typeId });
+          result = await this.fetchVideos({ page: 1, typeId: v.typeId, section: "category" });
         } else if (v.category) {
-          result = await this.fetchVideos({ page: 1, keyword: v.category });
+          result = await this.fetchVideos({ page: 1, keyword: v.category, section: "search" });
         } else {
-          // fallback: use words from title
           const words = (v.title || "").split(/[\s_\-]+/).filter(w => w.length > 3).slice(0, 2).join(" ");
-          result = await this.fetchVideos({ page: 1, keyword: words || "hot" });
+          result = await this.fetchVideos({ page: 1, keyword: words || "hot", section: "search" });
         }
         const related = (result.list || []).filter(x => String(x.id) !== String(v.id)).slice(0, 12);
         this._playerRelated = related;
@@ -3688,8 +4338,10 @@
     /* THEMED EMBED URL BUILDER (Uses upstream player built-in minimal cinema theme & matching colors) */
     buildThemedEmbedUrl(embedUrl) {
       if (!embedUrl) return "";
-      const currentTheme = "minimal"; // Built-in Minimal Cinema theme
-      const currentColor = this.creamTheme ? "8B2E1A" : "F4D59A"; // Light mode honey-red vs Dark mode cream-gold
+      // External embeds (S2 / S3): return as-is (no upload18 theme params)
+      if (/eporner\.com|xxxtv\.top/i.test(embedUrl)) return embedUrl;
+      const currentTheme = "minimal";
+      const currentColor = this.creamTheme ? "8B2E1A" : "F4D59A";
       try {
         const u = new URL(embedUrl, "https://upload18.net");
         u.searchParams.set("theme", currentTheme);

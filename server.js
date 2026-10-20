@@ -519,6 +519,21 @@ const server = http.createServer(async (req, res) => {
 
   if (u.pathname === "/api/health") return json(res, 200, { ok: true });
 
+  // Geo: Eporner blocked in IN, CN, RU, UG, AU → XVID; else Eporner
+  if (u.pathname === "/api/geo") {
+    const blocked = new Set(["IN", "CN", "RU", "UG", "AU", "PK", "BD", "NP", "LK"]);
+    const cf = (req.headers["cf-ipcountry"] || "").toUpperCase();
+    const xg = (req.headers["x-country-code"] || req.headers["x-vercel-ip-country"] || "").toUpperCase();
+    const code = cf || xg || "";
+    const isBlocked = blocked.has(code);
+    return json(res, 200, {
+      country_code: code,
+      isIndia: code === "IN",
+      blocked: isBlocked,
+      source: isBlocked ? "xvid" : "eporner"
+    });
+  }
+
   if (u.pathname === "/api/vod") {
     if (req.method !== "GET") return json(res, 405, { code: 0, msg: "GET only" });
 
