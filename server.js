@@ -351,14 +351,107 @@ function getIndexTemplate() {
   }
 }
 
+function httpsJson(url) {
+  return new Promise((resolve, reject) => {
+    const lib = url.startsWith("https") ? https : http;
+    const req = lib.get(
+      url,
+      {
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "Mozilla/5.0 (compatible; p0rn-bot/2; +https://p0rn.online)"
+        },
+        timeout: 12000
+      },
+      (res) => {
+        const chunks = [];
+        res.on("data", (c) => chunks.push(c));
+        res.on("end", () => {
+          try {
+            resolve(JSON.parse(Buffer.concat(chunks).toString("utf8")));
+          } catch (e) {
+            reject(e);
+          }
+        });
+      }
+    );
+    req.on("error", reject);
+    req.on("timeout", () => {
+      req.destroy();
+      reject(new Error("timeout"));
+    });
+  });
+}
+
+/** Normalize any source into { name, time, category, thumb_url, embed } for OG/SSR */
 async function fetchVideoMeta(vId) {
-  const cacheKey = "meta:v:" + vId;
+  const id = String(vId || "");
+  const cacheKey = "meta:v:" + id;
   const hit = getC(cacheKey);
   if (hit) {
     try { return JSON.parse(hit); } catch (_) {}
   }
 
-  const qs = new URLSearchParams({ at: "json", ac: "detail", ids: String(vId) }).toString();
+  // Server 3 — XXXtv
+  if (id.startsWith("xt_")) {
+    try {
+      const pure = id.slice(3);
+      const data = await httpsJson("https://xxxtv.top/api/videos/" + encodeURIComponent(pure));
+      const raw = data.data || data;
+      if (raw && raw.id) {
+        const norm = {
+          name: raw.title || "Watch Video",
+          time: raw.duration ? String(Math.floor(raw.duration / 60)) + "m" : "",
+          type_name: "Video",
+          category: ["Video"],
+          thumb_url: raw.thumbnail || "",
+          poster_url: raw.thumbnail || "",
+          embed: raw.embedUrl || ("https://xxxtv.top/embed/" + pure),
+          _source: "3"
+        };
+        setC(cacheKey, JSON.stringify(norm));
+        return norm;
+      }
+    } catch (err) {
+      console.warn("XXXtv meta fail", id, err.message);
+    }
+    return null;
+  }
+
+  // Server 2 — Eporner
+  if (id.startsWith("ep_")) {
+    try {
+      const pure = id.slice(3);
+      const data = await httpsJson(
+        "https://www.eporner.com/api/v2/video/id/?id=" + encodeURIComponent(pure) + "&thumbsize=big&format=json"
+      );
+      const raw = data.video || data;
+      if (raw && raw.id) {
+        const thumb =
+          (raw.default_thumb && raw.default_thumb.src) ||
+          (raw.thumbs && raw.thumbs[0] && raw.thumbs[0].src) ||
+          "";
+        const norm = {
+          name: raw.title || "Watch Video",
+          time: raw.length_min || "",
+          type_name: (raw.keywords || "Video").split(",")[0] || "Video",
+          category: [(raw.keywords || "Video").split(",")[0] || "Video"],
+          thumb_url: thumb,
+          poster_url: thumb,
+          embed: raw.embed || ("https://www.eporner.com/embed/" + pure + "/"),
+          _source: "2"
+        };
+        setC(cacheKey, JSON.stringify(norm));
+        return norm;
+      }
+    } catch (err) {
+      console.warn("Eporner meta fail", id, err.message);
+    }
+    return null;
+  }
+
+  // Server 1 — XVID
+  const qs = new URLSearchParams({ at: "json", ac: "detail", ids: id }).toString();
   const apiHit = getC(qs);
   if (apiHit) {
     try {
@@ -381,7 +474,7 @@ async function fetchVideoMeta(vId) {
       return raw;
     }
   } catch (err) {
-    console.warn("Video meta fetch failed for id " + vId + ": " + err.message);
+    console.warn("Video meta fetch failed for id " + id + ": " + err.message);
   }
   return null;
 }
@@ -396,8 +489,8 @@ async function serveHtml(req, res, u) {
   const vId = u.searchParams.get("v") || u.searchParams.get("video");
   const colId = u.searchParams.get("collection") || u.searchParams.get("cat");
 
-  let pageTitle = "p0rn - Watch Quality Videos";
-  let pageDesc = "Watch high quality HD streaming videos on p0rn.";
+  let pageTitle = "p0rn - Free HD Porn Videos, XXX Sex Videos Online";
+  let pageDesc = "Watch free HD porn videos, XXX sex videos, amateur, MILF, Indian, Japanese, Latina and more on p0rn. Fast streaming, daily updates.";
   let pageImage = `${BASE_DOMAIN}/logo.png`;
   let pageUrl = `${BASE_DOMAIN}/`;
   let ogType = "website";
@@ -446,7 +539,22 @@ async function serveHtml(req, res, u) {
     ogType = "website";
   }
 
-  // Safe SSR tag replacements for WhatsApp, Instagram, Telegram, Twitter & Googlebot
+  const wd = u.searchParams.get("wd") || u.searchParams.get("q") || u.searchParams.get("search");
+  if (wd && !vId && !colId) {
+    const term = String(wd).trim().slice(0, 80);
+    const nice = term.replace(/\+/g, " ");
+    pageTitle = `${nice} Porn Videos - Free HD XXX on p0rn`;
+    pageDesc = `Watch free ${nice} porn videos in HD on p0rn. Hot ${nice} sex videos, amateur & more. Stream now.`;
+    pageUrl = `${BASE_DOMAIN}/?wd=${encodeURIComponent(term)}`;
+    pageImage = `${BASE_DOMAIN}/logo.png`;
+    ogType = "website";
+  }
+
+  // Absolute image URL for WhatsApp (must be https)
+  if (pageImage && pageImage.startsWith("//")) pageImage = "https:" + pageImage;
+  if (pageImage && pageImage.startsWith("/")) pageImage = BASE_DOMAIN + pageImage;
+
+    // Safe SSR tag replacements for WhatsApp, Instagram, Telegram, Twitter & Googlebot
   html = html
     .replace(/<title id="pageTitle">[\s\S]*?<\/title>/, `<title id="pageTitle">${escapeHtml(pageTitle)}</title>`)
     .replace(/<meta name="description" id="metaDescription" content="[\s\S]*?" \/>/, `<meta name="description" id="metaDescription" content="${escapeHtml(pageDesc)}" />`)
@@ -457,6 +565,8 @@ async function serveHtml(req, res, u) {
     .replace(/<meta property="og:description" content="[\s\S]*?" id="ogDesc" \/>/, `<meta property="og:description" content="${escapeHtml(pageDesc)}" id="ogDesc" />`)
     .replace(/<meta property="og:image" content="[\s\S]*?" id="ogImage" \/>/, `<meta property="og:image" content="${escapeHtml(pageImage)}" id="ogImage" />`)
     .replace(/<meta property="og:image:secure_url" content="[\s\S]*?" id="ogImageSecure" \/>/, `<meta property="og:image:secure_url" content="${escapeHtml(pageImage)}" id="ogImageSecure" />`)
+    .replace(/<meta property="og:image:width" content="[\s\S]*?" id="ogImageWidth" \/>/, `<meta property="og:image:width" content="1200" id="ogImageWidth" />`)
+    .replace(/<meta property="og:image:height" content="[\s\S]*?" id="ogImageHeight" \/>/, `<meta property="og:image:height" content="630" id="ogImageHeight" />`)
     .replace(/<meta property="og:url" content="[\s\S]*?" id="ogUrl" \/>/, `<meta property="og:url" content="${escapeHtml(pageUrl)}" id="ogUrl" />`)
     .replace(/<meta name="twitter:title" content="[\s\S]*?" id="twTitle" \/>/, `<meta name="twitter:title" content="${escapeHtml(pageTitle)}" id="twTitle" />`)
     .replace(/<meta name="twitter:description" content="[\s\S]*?" id="twDesc" \/>/, `<meta name="twitter:description" content="${escapeHtml(pageDesc)}" id="twDesc" />`)

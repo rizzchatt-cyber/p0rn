@@ -86,46 +86,54 @@
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover, user-scalable=yes" />
-  <title id="pageTitle">p0rn - Watch Quality Videos</title>
+  <title id="pageTitle">p0rn - Free HD Porn Videos, XXX Sex Videos Online</title>
   
   <!-- Icons & Logo -->
   <link rel="icon" type="image/png" sizes="32x32" href="https://p0rn.online/logo.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="https://p0rn.online/logo.png" />
   <link rel="shortcut icon" type="image/png" href="https://p0rn.online/logo.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="https://p0rn.online/logo.png" />
-  <link rel="image_src" href="https://p0rn.online/logo.png" />
+  <link rel="image_src" href="https://p0rn.online/logo.png" id="imageSrc" />
   <link rel="canonical" href="https://p0rn.online/" id="canonicalUrl" />
 
   <meta name="theme-color" content="#1A1210" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="description" id="metaDescription" content="Watch high quality HD streaming videos on p0rn." />
+  <meta name="description" id="metaDescription" content="Watch free HD porn videos, XXX sex videos, amateur, MILF, Indian, Japanese, Latina &amp; more on p0rn. Fast streaming, daily updates, mobile friendly." />
+  <meta name="keywords" id="metaKeywords" content="porn, xxx, sex, free porn, porn videos, xxx videos, sex videos, hardcore porn, amateur porn, milf, hentai, japanese porn, indian porn, lesbian porn, big ass, anal, step mom, pinay, ebony, latina, big tits, creampie, threesome, mature, cougar, blowjob, deepthroat, cumshot, webcam, onlyfans, desi, bhabhi, porno, free xxx, hd porn, adult videos" />
+  <meta name="author" content="p0rn" />
+  <meta name="rating" content="adult" />
+  <meta name="RATING" content="RTA-ACCT-0000-0000-0000-0000-0000" />
 
   <!-- Open Graph / WhatsApp / Instagram / Facebook / Telegram / Discord -->
   <meta property="og:type" content="website" id="ogType" />
   <meta property="og:site_name" content="p0rn" />
-  <meta property="og:title" content="p0rn - Watch Quality Videos" id="ogTitle" />
-  <meta property="og:description" content="Watch high quality HD streaming videos on p0rn." id="ogDesc" />
+  <meta property="og:title" content="p0rn - Free HD Porn Videos, XXX Sex Videos Online" id="ogTitle" />
+  <meta property="og:description" content="Watch free HD porn videos, XXX sex videos, amateur, MILF, Indian, Japanese &amp; more. Fast streaming on p0rn." id="ogDesc" />
   <meta property="og:image" content="https://p0rn.online/logo.png" id="ogImage" />
   <meta property="og:image:secure_url" content="https://p0rn.online/logo.png" id="ogImageSecure" />
-  <meta property="og:image:type" content="image/png" />
-  <meta property="og:image:width" content="1671" />
-  <meta property="og:image:height" content="941" />
-  <meta property="og:image:alt" content="p0rn Logo" />
+  <meta property="og:image:type" content="image/png" id="ogImageType" />
+  <meta property="og:image:width" content="1200" id="ogImageWidth" />
+  <meta property="og:image:height" content="630" id="ogImageHeight" />
+  <meta property="og:image:alt" content="p0rn - Free HD Porn Videos" id="ogImageAlt" />
   <meta property="og:url" content="https://p0rn.online/" id="ogUrl" />
+  <meta property="og:locale" content="en_US" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" id="twCard" />
-  <meta name="twitter:title" content="p0rn - Watch Quality Videos" id="twTitle" />
-  <meta name="twitter:description" content="Watch high quality HD streaming videos on p0rn." id="twDesc" />
+  <meta name="twitter:title" content="p0rn - Free HD Porn Videos, XXX Sex Videos Online" id="twTitle" />
+  <meta name="twitter:description" content="Watch free HD porn videos, XXX sex videos, amateur, MILF, Indian, Japanese &amp; more on p0rn." id="twDesc" />
   <meta name="twitter:image" content="https://p0rn.online/logo.png" id="twImage" />
+  <meta name="twitter:image:alt" content="p0rn video preview" id="twImageAlt" />
 
   <!-- Sitemap & Search Engine Directives -->
   <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml" />
+  <link rel="sitemap" type="application/xml" title="Keywords Sitemap" href="/sitemap-keywords.xml" />
   <link rel="sitemap" type="application/xml" title="Collections Sitemap" href="/sitemap-collections.xml" />
   <meta name="robots" content="index, follow, max-image-preview:large, max-video-preview:-1, max-snippet:-1" />
+  <meta name="googlebot" content="index, follow, max-image-preview:large, max-video-preview:-1, max-snippet:-1" />
 
-  <!-- Google Structured Data with Logo & WebSite Organization -->
+  <!-- Google Structured Data -->
   <script type="application/ld+json" id="schemaStructuredData">
   {
     "@context": "https://schema.org",
@@ -138,8 +146,8 @@
         "logo": {
           "@type": "ImageObject",
           "url": "https://p0rn.online/logo.png",
-          "width": 1671,
-          "height": 941,
+          "width": 1200,
+          "height": 630,
           "caption": "p0rn Logo"
         },
         "image": "https://p0rn.online/logo.png"
@@ -149,9 +157,12 @@
         "@id": "https://p0rn.online/#website",
         "url": "https://p0rn.online/",
         "name": "p0rn",
-        "description": "Watch high quality HD streaming videos on p0rn.",
-        "publisher": {
-          "@id": "https://p0rn.online/#organization"
+        "description": "Free HD porn videos, XXX sex videos, amateur, MILF, Indian, Japanese, Latina and more.",
+        "publisher": { "@id": "https://p0rn.online/#organization" },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://p0rn.online/?wd={search_term_string}",
+          "query-input": "required name=search_term_string"
         }
       }
     ]
@@ -583,23 +594,23 @@
     }
     .home-top-row {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 14px 12px;
-      margin-bottom: 22px;
+      grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
+      gap: 20px 16px;
+      margin-bottom: 28px;
     }
-    .home-top-label {
-      font-size: 12px;
+    .home-top-label,
+    .home-lower-label {
+      font-size: 15px;
       font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--cream-sub);
-      margin: 0 0 10px;
+      color: var(--cream);
+      margin: 0 0 14px;
+      font-family: var(--font-display);
+      letter-spacing: 0.02em;
     }
     .home-lower-label {
-      font-size: 13px;
-      font-weight: 700;
+      margin-top: 8px;
       color: var(--cream-dim);
-      margin: 4px 0 12px;
+      font-size: 14px;
     }
     .video-card {
       display: flex;
@@ -2572,6 +2583,7 @@
         const params = new URLSearchParams(window.location.search);
         const vId = params.get("v") || params.get("video");
         const colId = params.get("collection") || params.get("cat");
+        const wdParam = params.get("wd") || params.get("q") || params.get("search");
 
         if (vId) {
           this.tab = "home";
@@ -2591,6 +2603,18 @@
             history.pushState({ colId: colId }, "", `${window.location.pathname}?collection=${colId}`);
           } catch (_) {}
           await this.openCategoryHub(colId, false);
+        } else if (wdParam) {
+          this.tab = "home";
+          this.renderNav();
+          this.query = String(wdParam).trim();
+          this.activeCat = "kw:" + this.query.toLowerCase();
+          const searchInput = document.getElementById("searchInput");
+          if (searchInput) searchInput.value = this.query;
+          const clearBtn = document.getElementById("clearBtn");
+          if (clearBtn) clearBtn.style.display = "flex";
+          this.page = 1;
+          this.renderCategoryBar();
+          await this.loadAndRenderHome();
         } else {
           const h = (location.hash || "").toLowerCase();
           if (h === "#collections" || h === "#category") {
@@ -4659,6 +4683,15 @@
       }
     }
 
+    absUrl(u, origin) {
+      if (!u) return `${origin}/logo.png`;
+      const s = String(u).trim();
+      if (/^https?:\/\//i.test(s)) return s;
+      if (s.startsWith("//")) return "https:" + s;
+      if (s.startsWith("/")) return origin + s;
+      return origin + "/" + s.replace(/^\.\//, "");
+    }
+
     updateMetadata(v) {
       if (!v) return;
       const defaultDomain = "https://p0rn.online";
@@ -4666,10 +4699,11 @@
         ? window.location.origin
         : defaultDomain;
       const logoUrl = `${origin}/logo.png`;
-      const thumbUrl = v.thumbnail || v.poster || logoUrl;
-      const videoUrl = `${origin}/?v=${v.id}`;
+      // WhatsApp / OG require absolute HTTPS image URL
+      const thumbUrl = this.absUrl(v.thumbnail || v.poster || logoUrl, origin);
+      const videoUrl = `${origin}/?v=${encodeURIComponent(v.id)}`;
       const title = `${v.title} - p0rn`;
-      const desc = `Watch ${v.title} in HD on p0rn. Duration: ${v.duration || 'Full length'}. ${v.category ? 'Category: ' + v.category + '.' : ''}`;
+      const desc = `Watch ${v.title} free in HD on p0rn. ${v.duration ? "Duration: " + v.duration + ". " : ""}${v.category ? v.category + " video. " : ""}XXX / sex video streaming.`;
 
       document.title = title;
       const setAttr = (id, attr, val) => {
@@ -4678,15 +4712,22 @@
       };
       setAttr("canonicalUrl", "href", videoUrl);
       setAttr("metaDescription", "content", desc);
+      setAttr("imageSrc", "href", thumbUrl);
       setAttr("ogType", "content", "video.other");
       setAttr("ogTitle", "content", title);
       setAttr("ogDesc", "content", desc);
       setAttr("ogImage", "content", thumbUrl);
       setAttr("ogImageSecure", "content", thumbUrl);
+      setAttr("ogImageType", "content", /\.jpe?g/i.test(thumbUrl) ? "image/jpeg" : (/\.webp/i.test(thumbUrl) ? "image/webp" : "image/png"));
+      setAttr("ogImageWidth", "content", "1200");
+      setAttr("ogImageHeight", "content", "630");
+      setAttr("ogImageAlt", "content", v.title || "Video preview");
       setAttr("ogUrl", "content", videoUrl);
+      setAttr("twCard", "content", "summary_large_image");
       setAttr("twTitle", "content", title);
       setAttr("twDesc", "content", desc);
       setAttr("twImage", "content", thumbUrl);
+      setAttr("twImageAlt", "content", v.title || "Video preview");
 
       const schemaEl = document.getElementById("schemaStructuredData");
       if (schemaEl) {
@@ -4701,8 +4742,8 @@
               "logo": {
                 "@type": "ImageObject",
                 "url": logoUrl,
-                "width": 1671,
-                "height": 941,
+                "width": 1200,
+                "height": 630,
                 "caption": "p0rn Logo"
               },
               "image": logoUrl
@@ -4716,9 +4757,7 @@
               "duration": this.secondsToIsoDuration(v.duration),
               "embedUrl": v.embed || "",
               "contentUrl": videoUrl,
-              "publisher": {
-                "@id": `${origin}/#organization`
-              }
+              "publisher": { "@id": `${origin}/#organization` }
             }
           ]
         };
