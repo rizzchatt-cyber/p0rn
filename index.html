@@ -24,7 +24,7 @@
       var _origOpen = window.open;
       window.open = function(url, target, features) {
         if (typeof url === "string") {
-          var isInternal = url.startsWith("/") || url.startsWith("?") || url.startsWith("#") || url.startsWith(window.location.origin) || url.startsWith("https://p0rn.online");
+          var isInternal = url.startsWith("/") || url.startsWith("?") || url.startsWith("#") || url.startsWith(window.location.origin) || url.startsWith("https://www.p0rn.online");
           var isUserAd = url.includes("magsrv.com") || url.includes("pemsrv.com") || url.includes("syndication") || url.includes("exoclick");
           if (isInternal || isUserAd) {
             return _origOpen ? _origOpen.call(window, url, target, features) : null;
@@ -46,7 +46,7 @@
         if (a) {
           var href = a.getAttribute("href") || "";
           if (href && !href.startsWith("#") && !href.startsWith("javascript:")) {
-            var isInternal = href.startsWith("/") || href.startsWith("?") || href.startsWith(window.location.origin) || href.startsWith("https://p0rn.online");
+            var isInternal = href.startsWith("/") || href.startsWith("?") || href.startsWith(window.location.origin) || href.startsWith("https://www.p0rn.online");
             var isUserAd = href.includes("magsrv.com") || href.includes("pemsrv.com") || href.includes("syndication") || href.includes("exoclick");
             if (!isInternal && !isUserAd) {
               e.preventDefault();
@@ -89,12 +89,12 @@
   <title id="pageTitle">p0rn - Free HD Porn Videos, XXX Sex Videos Online</title>
   
   <!-- Icons & Logo -->
-  <link rel="icon" type="image/png" sizes="32x32" href="https://p0rn.online/logo.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="https://p0rn.online/logo.png" />
-  <link rel="shortcut icon" type="image/png" href="https://p0rn.online/logo.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="https://p0rn.online/logo.png" />
-  <link rel="image_src" href="https://p0rn.online/logo.png" id="imageSrc" />
-  <link rel="canonical" href="https://p0rn.online/" id="canonicalUrl" />
+  <link rel="icon" type="image/png" sizes="32x32" href="https://www.p0rn.online/logo.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="https://www.p0rn.online/logo.png" />
+  <link rel="shortcut icon" type="image/png" href="https://www.p0rn.online/logo.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="https://www.p0rn.online/logo.png" />
+  <link rel="image_src" href="https://www.p0rn.online/logo.png" id="imageSrc" />
+  <link rel="canonical" href="https://www.p0rn.online/" id="canonicalUrl" />
 
   <meta name="theme-color" content="#1A1210" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -110,20 +110,20 @@
   <meta property="og:site_name" content="p0rn" />
   <meta property="og:title" content="p0rn - Free HD Porn Videos, XXX Sex Videos Online" id="ogTitle" />
   <meta property="og:description" content="Watch free HD porn videos, XXX sex videos, amateur, MILF, Indian, Japanese &amp; more. Fast streaming on p0rn." id="ogDesc" />
-  <meta property="og:image" content="https://p0rn.online/logo.png" id="ogImage" />
-  <meta property="og:image:secure_url" content="https://p0rn.online/logo.png" id="ogImageSecure" />
+  <meta property="og:image" content="https://www.p0rn.online/logo.png" id="ogImage" />
+  <meta property="og:image:secure_url" content="https://www.p0rn.online/logo.png" id="ogImageSecure" />
   <meta property="og:image:type" content="image/png" id="ogImageType" />
   <meta property="og:image:width" content="1200" id="ogImageWidth" />
   <meta property="og:image:height" content="630" id="ogImageHeight" />
   <meta property="og:image:alt" content="p0rn - Free HD Porn Videos" id="ogImageAlt" />
-  <meta property="og:url" content="https://p0rn.online/" id="ogUrl" />
+  <meta property="og:url" content="https://www.p0rn.online/" id="ogUrl" />
   <meta property="og:locale" content="en_US" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" id="twCard" />
   <meta name="twitter:title" content="p0rn - Free HD Porn Videos, XXX Sex Videos Online" id="twTitle" />
   <meta name="twitter:description" content="Watch free HD porn videos, XXX sex videos, amateur, MILF, Indian, Japanese &amp; more on p0rn." id="twDesc" />
-  <meta name="twitter:image" content="https://p0rn.online/logo.png" id="twImage" />
+  <meta name="twitter:image" content="https://www.p0rn.online/logo.png" id="twImage" />
   <meta name="twitter:image:alt" content="p0rn video preview" id="twImageAlt" />
 
   <!-- Sitemap & Search Engine Directives -->
@@ -140,28 +140,28 @@
     "@graph": [
       {
         "@type": "Organization",
-        "@id": "https://p0rn.online/#organization",
+        "@id": "https://www.p0rn.online/#organization",
         "name": "p0rn",
-        "url": "https://p0rn.online/",
+        "url": "https://www.p0rn.online/",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://p0rn.online/logo.png",
+          "url": "https://www.p0rn.online/logo.png",
           "width": 1200,
           "height": 630,
           "caption": "p0rn Logo"
         },
-        "image": "https://p0rn.online/logo.png"
+        "image": "https://www.p0rn.online/logo.png"
       },
       {
         "@type": "WebSite",
-        "@id": "https://p0rn.online/#website",
-        "url": "https://p0rn.online/",
+        "@id": "https://www.p0rn.online/#website",
+        "url": "https://www.p0rn.online/",
         "name": "p0rn",
         "description": "Free HD porn videos, XXX sex videos, amateur, MILF, Indian, Japanese, Latina and more.",
-        "publisher": { "@id": "https://p0rn.online/#organization" },
+        "publisher": { "@id": "https://www.p0rn.online/#organization" },
         "potentialAction": {
           "@type": "SearchAction",
-          "target": "https://p0rn.online/?wd={search_term_string}",
+          "target": "https://www.p0rn.online/?wd={search_term_string}",
           "query-input": "required name=search_term_string"
         }
       }
@@ -1984,6 +1984,19 @@
 
   <nav class="bottom-nav" id="bottomNav"></nav>
 
+  
+  <footer id="siteFooter" class="site-footer" style="padding:28px 16px 100px;text-align:center;color:var(--cream-dim);font-size:13px;line-height:1.6;">
+    <p style="max-width:640px;margin:0 auto 12px;"><strong style="color:var(--cream);">p0rn</strong> — Free HD porn videos, XXX sex videos, amateur, MILF, Indian, Japanese, Latina and more. Stream online, updated daily.</p>
+    <p style="margin:0 0 10px;">
+      <a href="/" style="color:var(--cream);margin:0 8px;">Home</a>
+      <a href="/category/indian" style="color:var(--cream);margin:0 8px;">Indian</a>
+      <a href="/category/milf" style="color:var(--cream);margin:0 8px;">MILF</a>
+      <a href="/category/amateur" style="color:var(--cream);margin:0 8px;">Amateur</a>
+      <a href="/search/free-porn" style="color:var(--cream);margin:0 8px;">Free porn</a>
+    </p>
+    <p style="opacity:.7;margin:0;">Adults only (18+). All videos hosted by third-party providers.</p>
+  </footer>
+
   <div id="toastBox"></div>
 
   <script>
@@ -2356,7 +2369,7 @@
     return {
       id: "ep_" + v.id,
       _epId: v.id,
-      title: (v.title || "Untitled").replace(/&amp;/g, "&"),
+      title: cleanTitle(v.title || "Untitled"),
       duration: v.length_min || "—",
       category: (v.keywords || "").split(",")[0] || "Video",
       catSlug: "s2",
@@ -2385,7 +2398,7 @@
     return {
       id: "xt_" + v.id,
       _xtId: v.id,
-      title: (v.title || "Untitled").replace(/&amp;/g, "&"),
+      title: cleanTitle(v.title || "Untitled"),
       duration: formatSec(v.duration),
       category: "Video",
       catSlug: "s3",
@@ -2502,7 +2515,7 @@
     const poster = raw.poster_url || raw.thumb_url || "";
     return {
       id: raw.id,
-      title: (raw.name || raw.source_vod_name || "Untitled").replace(/&amp;/g, "&").replace(/&bull;/g, "•"),
+      title: cleanTitle(raw.name || raw.source_vod_name || "Untitled"),
       duration: raw.time || "—",
       category: cat,
       catSlug: String(raw.type_id || cat).toLowerCase().replace(/\s+/g, "-"),
@@ -2520,21 +2533,48 @@
     };
   }
 
+  function cleanTitle(s) {
+    return String(s || "")
+      .replace(/&amp;/g, "&").replace(/&bull;/g, "•").replace(/&quot;/g, '"')
+      .replace(/â€™/g, "'").replace(/â€˜/g, "'").replace(/â€œ/g, '"').replace(/â€/g, '"')
+      .replace(/Ã©/g, "é").replace(/Ã¡/g, "á").replace(/Ã­/g, "í")
+      .replace(/\uFFFD/g, "");
+  }
+
+  function slugifyTitle(s) {
+    return cleanTitle(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80) || "video";
+  }
+
+  function videoPath(v) {
+    const id = v && v.id != null ? v.id : v;
+    const slug = v && v.title ? slugifyTitle(v.title) : "watch";
+    return "/video/" + encodeURIComponent(id) + "/" + slug;
+  }
+
   function formatAgo(dateStr) {
     if (!dateStr) return "Recently";
     try {
-      const d = new Date(dateStr.replace(" ", "T"));
-      if (isNaN(d.getTime())) return dateStr.slice(0, 10);
+      let raw = String(dateStr).trim();
+      if (/^\d{10,13}$/.test(raw)) {
+        const n = Number(raw);
+        raw = new Date(n < 1e12 ? n * 1000 : n).toISOString();
+      }
+      const d = new Date(raw.includes("T") ? raw : raw.replace(" ", "T"));
+      if (isNaN(d.getTime())) return "Recently";
       const diff = Date.now() - d.getTime();
+      if (diff < 0) return "Recently";
       const mins = Math.floor(diff / 60000);
       if (mins < 60) return mins <= 1 ? "Just now" : mins + " min ago";
       const hrs = Math.floor(mins / 60);
       if (hrs < 24) return hrs + " hour" + (hrs > 1 ? "s" : "") + " ago";
       const days = Math.floor(hrs / 24);
       if (days < 30) return days + " day" + (days > 1 ? "s" : "") + " ago";
-      return dateStr.slice(0, 10);
+      const months = Math.floor(days / 30);
+      if (months < 12) return months + " month" + (months > 1 ? "s" : "") + " ago";
+      const years = Math.floor(months / 12);
+      return years + " year" + (years > 1 ? "s" : "") + " ago";
     } catch {
-      return dateStr.slice(0, 10);
+      return "Recently";
     }
   }
 
@@ -2581,9 +2621,20 @@
         window.addEventListener("hashchange", () => this.applyHashRoute());
 
         const params = new URLSearchParams(window.location.search);
-        const vId = params.get("v") || params.get("video");
-        const colId = params.get("collection") || params.get("cat");
-        const wdParam = params.get("wd") || params.get("q") || params.get("search");
+        const path = window.location.pathname || "/";
+        let vId = params.get("v") || params.get("video");
+        let colId = params.get("collection") || params.get("cat");
+        let wdParam = params.get("wd") || params.get("q") || params.get("search");
+        const pathVideo = path.match(/^\/video\/([^/]+)/);
+        const pathCat = path.match(/^\/category\/([^/]+)/);
+        const pathSearch = path.match(/^\/search\/([^/]+)/);
+        if (pathVideo) vId = decodeURIComponent(pathVideo[1]);
+        if (pathCat) {
+          const slug = decodeURIComponent(pathCat[1]).toLowerCase();
+          const map = { indian:"41", amateur:"8", teen:"65", milf:"49", latina:"44", asian:"11", "asian-woman":"11", japanese:"43", lesbian:"45", anal:"9", "big-tits":"20", blowjob:"23", creampie:"27", ebony:"21", "big-ass":"18", mature:"48" };
+          colId = map[slug] || slug;
+        }
+        if (pathSearch) wdParam = decodeURIComponent(pathSearch[1]).replace(/-/g, " ");
 
         if (vId) {
           this.tab = "home";
@@ -2591,7 +2642,7 @@
           // Seed history with home entry so pressing phone back button does not exit the website
           try {
             history.replaceState({ page: "home" }, "p0rn", window.location.pathname + "#home");
-            history.pushState({ videoId: vId }, "", `${window.location.pathname}?v=${vId}`);
+            history.pushState({ videoId: vId }, "", videoPath({ id: vId, title: (this.activeVideo && this.activeVideo.title) || "" }));
           } catch (_) {}
           await this.loadAndRenderHome();
           await this.playVideo(vId, false);
@@ -3192,6 +3243,15 @@
           this.page = 1;
           this.videos = [];
           this.renderCategoryBar();
+          try {
+            const q = this.query;
+            if (q) {
+              const path = "/search/" + encodeURIComponent(q.replace(/\s+/g, "-"));
+              history.replaceState({ search: q }, "", path);
+            } else {
+              history.replaceState({ page: "home" }, "", "/");
+            }
+          } catch (_) {}
           this.loadAndRenderHome();
         }, 420);
       });
@@ -3201,6 +3261,10 @@
           clearTimeout(this.searchTimer);
           this.page = 1;
           this.videos = [];
+          try {
+            const q = this.query;
+            if (q) history.pushState({ search: q }, "", "/search/" + encodeURIComponent(q.replace(/\s+/g, "-")));
+          } catch (_) {}
           this.loadAndRenderHome();
         }
       });
@@ -3213,6 +3277,7 @@
       document.getElementById("clearBtn").style.display = "none";
       this.page = 1;
       this.videos = [];
+      try { history.replaceState({ page: "home" }, "", "/"); } catch (_) {}
       this.renderCategoryBar();
       this.loadAndRenderHome();
     }
@@ -3258,7 +3323,7 @@
         img = `<img src="${this.esc(src)}" alt="${this.esc(v.title)}" loading="${eager ? "eager" : "lazy"}" decoding="async" fetchpriority="${prio}" class="lq" data-hi="${this.esc(dataHi)}" onload="app.onImgProgress(this)" onerror="this.style.display='none'" />`;
       }
       return `
-        <a href="?v=${this.esc(v.id)}" class="video-card" data-video-id="${this.esc(v.id)}" data-duration="${this.esc(v.duration)}" data-embed="${this.esc(v.embed || '')}" data-preview="${this.esc(v.preview || '')}" data-thumb="${this.esc(hi)}" onclick="app.onCardClick('${this.esc(v.id)}', event)" onmouseenter="app.onCardHover(this, event)" onmousemove="app.onCardMove(this, event)" onmouseleave="app.onCardLeave(this, event)">
+        <a href="${videoPath(v)}" class="video-card" data-video-id="${this.esc(v.id)}" data-duration="${this.esc(v.duration)}" data-embed="${this.esc(v.embed || '')}" data-preview="${this.esc(v.preview || '')}" data-thumb="${this.esc(hi)}" onclick="app.onCardClick('${this.esc(v.id)}', event)" onmouseenter="app.onCardHover(this, event)" onmousemove="app.onCardMove(this, event)" onmouseleave="app.onCardLeave(this, event)">
           <div class="thumb-wrap">
             ${img}
             <canvas class="preview-canvas"></canvas>
@@ -3624,6 +3689,8 @@
               : (this.categories.find(c => String(c.id) === String(this.activeCat))?.name || "Category")));
 
       let html = `
+        ${(!this.query && this.activeCat === "all") ? `<h1 class="page-h1" style="font-family:var(--font-display);font-size:1.5rem;margin:0 0 8px;color:var(--cream);">Free HD Porn Videos &amp; XXX Sex Videos</h1>
+        <p class="page-intro" style="margin:0 0 16px;color:var(--cream-dim);font-size:14px;max-width:720px;">Watch free porn videos online — amateur, MILF, Indian, Japanese, Latina and more. Updated daily on p0rn.</p>` : (this.query ? `<h1 class="page-h1" style="font-family:var(--font-display);font-size:1.35rem;margin:0 0 12px;color:var(--cream);">${this.esc(this.query)} videos</h1>` : "")}
         <div class="section-head">
           <h2 class="section-title">
             <span>${this.esc(title)}</span>
@@ -3927,7 +3994,7 @@
 
     updateCollectionMetadata(cat) {
       if (!cat) return;
-      const defaultDomain = "https://p0rn.online";
+      const defaultDomain = "https://www.p0rn.online";
       const origin = (window.location.origin && window.location.origin !== "null" && !window.location.origin.includes("localhost"))
         ? window.location.origin
         : defaultDomain;
@@ -4506,7 +4573,7 @@
         || this.history.find(x => String(x.id) === String(id))
         || this.activeVideo;
       const targetId = v ? v.id : id;
-      const defaultDomain = "https://p0rn.online";
+      const defaultDomain = "https://www.p0rn.online";
       const origin = (window.location.origin && window.location.origin !== "null" && !window.location.origin.includes("localhost"))
         ? window.location.origin
         : defaultDomain;
@@ -4622,7 +4689,7 @@
     }
 
     restoreDefaultMetadata() {
-      const defaultDomain = "https://p0rn.online";
+      const defaultDomain = "https://www.p0rn.online";
       const origin = (window.location.origin && window.location.origin !== "null" && !window.location.origin.includes("localhost"))
         ? window.location.origin
         : defaultDomain;
@@ -4694,14 +4761,14 @@
 
     updateMetadata(v) {
       if (!v) return;
-      const defaultDomain = "https://p0rn.online";
+      const defaultDomain = "https://www.p0rn.online";
       const origin = (window.location.origin && window.location.origin !== "null" && !window.location.origin.includes("localhost"))
         ? window.location.origin
         : defaultDomain;
       const logoUrl = `${origin}/logo.png`;
       // WhatsApp / OG require absolute HTTPS image URL
       const thumbUrl = this.absUrl(v.thumbnail || v.poster || logoUrl, origin);
-      const videoUrl = `${origin}/?v=${encodeURIComponent(v.id)}`;
+      const videoUrl = `${origin}${videoPath(v)}`;
       const title = `${v.title} - p0rn`;
       const desc = `Watch ${v.title} free in HD on p0rn. ${v.duration ? "Duration: " + v.duration + ". " : ""}${v.category ? v.category + " video. " : ""}XXX / sex video streaming.`;
 

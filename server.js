@@ -14,7 +14,7 @@ const path = require("path");
 const { URL } = require("url");
 
 const PORT = Number(process.env.PORT) || 3000;
-const BASE_DOMAIN = process.env.BASE_DOMAIN || "https://p0rn.online";
+const BASE_DOMAIN = process.env.BASE_DOMAIN || "https://www.p0rn.online";
 const UPSTREAM = process.env.UPSTREAM || "https://xvidapi.com/api.php/provide/vod";
 const ROOT = __dirname;
 const PAGE_SIZE = 24;
@@ -25,6 +25,22 @@ const CACHE_TTL = 60_000;
 const RATE_MAX = 180;
 const RATE_WIN = 60_000;
 
+const CATEGORY_SLUGS = {
+  indian: "41", amateur: "8", teen: "65", milf: "49", latina: "44",
+  asian: "11", "asian-woman": "11", japanese: "43", lesbian: "45", anal: "9",
+  "big-tits": "20", blowjob: "23", creampie: "27", pornstar: "53", exotic: "30",
+  interracial: "42", gangbang: "37", bbw: "15", arab: "10", "real-amateur": "54",
+  "cam-porn": "26", bdsm: "16", "big-ass": "18", blonde: "22", brunette: "24",
+  mature: "48", squirting: "62", ebony: "21", massage: "47"
+};
+function slugify(s) {
+  return String(s || "")
+    .toLowerCase()
+    .replace(/&amp;/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 80) || "video";
+}
 const CATEGORY_NAMES = {
   41: "Indian", 8: "Amateur", 65: "Teen", 49: "MILF", 44: "Latina",
   11: "Asian Woman", 43: "Japanese", 45: "Lesbian", 9: "Anal", 20: "Big Tits",
@@ -479,98 +495,141 @@ async function fetchVideoMeta(vId) {
   return null;
 }
 
-async function serveHtml(req, res, u) {
+async function serveHtml(req, res, u, route = {}) {
   let html = getIndexTemplate();
   if (!html) {
     res.writeHead(500, { "Content-Type": "text/plain" });
     return res.end("Server error: index.html missing");
   }
 
-  const vId = u.searchParams.get("v") || u.searchParams.get("video");
-  const colId = u.searchParams.get("collection") || u.searchParams.get("cat");
+  // Resolve route: path-based preferred, query params supported
+  let vId = route.vId || u.searchParams.get("v") || u.searchParams.get("video");
+  let colId = route.colId || u.searchParams.get("collection") || u.searchParams.get("cat");
+  let wd = route.wd || u.searchParams.get("wd") || u.searchParams.get("q") || u.searchParams.get("search");
+  const pageNum = Number(u.searchParams.get("page") || route.page || 1) || 1;
 
   let pageTitle = "p0rn - Free HD Porn Videos, XXX Sex Videos Online";
   let pageDesc = "Watch free HD porn videos, XXX sex videos, amateur, MILF, Indian, Japanese, Latina and more on p0rn. Fast streaming, daily updates.";
-  let pageImage = `${BASE_DOMAIN}/logo.png`;
-  let pageUrl = `${BASE_DOMAIN}/`;
+  let pageImage = BASE_DOMAIN + "/logo.png";
+  let pageUrl = BASE_DOMAIN + "/";
   let ogType = "website";
   let videoObject = null;
+  let h1 = "Free HD Porn Videos & XXX Sex Videos";
+  let bodyText = "Stream free HD porn videos, XXX clips, amateur, MILF, Indian, Japanese, Latina and more. Updated daily. Mobile friendly.";
+  let ssrExtra = "";
 
   if (vId) {
-    pageUrl = `${BASE_DOMAIN}/?v=${encodeURIComponent(vId)}`;
     const v = await fetchVideoMeta(vId);
     if (v) {
-      const cleanName = (v.name || v.source_vod_name || "Watch Video").replace(/&amp;/g, "&").replace(/&bull;/g, "•");
+      let cleanName = (v.name || v.source_vod_name || "Watch Video")
+        .replace(/&amp;/g, "&").replace(/&bull;/g, "•")
+        .replace(/â€™/g, "'").replace(/â€œ/g, '"').replace(/â€/g, '"')
+        .replace(/Ã©/g, "é").replace(/Ã¡/g, "á");
       const duration = v.time || "";
       const cat = (Array.isArray(v.category) && v.category[0]) || v.type_name || "Video";
-      const thumb = v.thumb_url || v.poster_url || pageImage;
-
-      pageTitle = `${cleanName} - p0rn`;
-      pageDesc = `Watch ${cleanName} in HD on p0rn. Duration: ${duration || "Full length"}. Collection: ${cat}.`;
+      let thumb = v.thumb_url || v.poster_url || pageImage;
+      if (thumb && thumb.startsWith("//")) thumb = "https:" + thumb;
+      const slug = slugify(cleanName);
+      pageUrl = BASE_DOMAIN + "/video/" + encodeURIComponent(vId) + "/" + slug;
+      pageTitle = cleanName + " - Watch Free HD on p0rn";
+      pageDesc = "Watch " + cleanName + " free in HD on p0rn. " + (duration ? "Duration: " + duration + ". " : "") + (cat ? cat + ". " : "") + "XXX / sex video streaming.";
       pageImage = thumb;
       ogType = "video.other";
-
-      let embedUrl = "";
+      h1 = cleanName;
+      bodyText = pageDesc;
+      let embedUrl = v.embed || "";
       try {
         const ep = v.episodes && v.episodes.server_data;
         if (ep) {
           const keys = Object.keys(ep);
-          if (keys.length) embedUrl = ep[keys[0]].link_embed || "";
+          if (keys.length) embedUrl = ep[keys[0]].link_embed || embedUrl;
         }
       } catch (_) {}
-
       videoObject = {
         name: cleanName,
         description: pageDesc,
         thumbUrl: thumb,
         embedUrl: embedUrl,
-        contentUrl: pageUrl
+        contentUrl: pageUrl,
+        duration: duration
       };
+      ssrExtra = '<div class="ssr-video"><img src="' + escapeHtml(thumb) + '" alt="' + escapeHtml(cleanName) + '" width="640" height="360" loading="eager" /><p>' + escapeHtml(pageDesc) + '</p><p><a href="' + escapeHtml(pageUrl) + '">Play video</a></p></div>';
     } else {
+      pageUrl = BASE_DOMAIN + "/video/" + encodeURIComponent(vId);
       pageTitle = "Watch Video - p0rn";
       ogType = "video.other";
+      h1 = "Watch Video";
+      bodyText = "Loading video on p0rn.";
     }
   } else if (colId) {
-    const catName = CATEGORY_NAMES[colId] || "Collection";
-    pageTitle = `${catName} Collection - Watch HD Videos on p0rn`;
-    pageDesc = `Explore the ${catName} video collection on p0rn. High quality HD video streaming.`;
-    pageUrl = `${BASE_DOMAIN}/?collection=${encodeURIComponent(colId)}`;
-    pageImage = `${BASE_DOMAIN}/logo.png`;
+    const catName = CATEGORY_NAMES[colId] || route.catName || "Collection";
+    const slug = slugify(catName);
+    pageTitle = catName + " Porn Videos - Free HD Collection on p0rn";
+    pageDesc = "Browse free " + catName + " porn videos in HD on p0rn. Stream " + catName.toLowerCase() + " sex videos, updated daily.";
+    pageUrl = BASE_DOMAIN + "/category/" + slug + (pageNum > 1 ? "?page=" + pageNum : "");
+    pageImage = BASE_DOMAIN + "/logo.png";
     ogType = "website";
-  }
-
-  const wd = u.searchParams.get("wd") || u.searchParams.get("q") || u.searchParams.get("search");
-  if (wd && !vId && !colId) {
+    h1 = catName + " Videos";
+    bodyText = pageDesc;
+  } else if (wd) {
     const term = String(wd).trim().slice(0, 80);
-    const nice = term.replace(/\+/g, " ");
-    pageTitle = `${nice} Porn Videos - Free HD XXX on p0rn`;
-    pageDesc = `Watch free ${nice} porn videos in HD on p0rn. Hot ${nice} sex videos, amateur & more. Stream now.`;
-    pageUrl = `${BASE_DOMAIN}/?wd=${encodeURIComponent(term)}`;
-    pageImage = `${BASE_DOMAIN}/logo.png`;
+    const nice = term.replace(/\+/g, " ").replace(/\s+/g, " ");
+    // Avoid "Porn Porn" when keyword already contains porn
+    const hasPorn = /\bporn\b/i.test(nice);
+    pageTitle = hasPorn
+      ? (nice.charAt(0).toUpperCase() + nice.slice(1) + " Videos - Free HD XXX on p0rn")
+      : (nice.charAt(0).toUpperCase() + nice.slice(1) + " Porn Videos - Free HD on p0rn");
+    pageDesc = "Watch free " + nice + " videos in HD on p0rn. Stream " + nice + " sex clips, amateur and more.";
+    pageUrl = BASE_DOMAIN + "/search/" + encodeURIComponent(nice.replace(/\s+/g, "-")) + (pageNum > 1 ? "?page=" + pageNum : "");
+    pageImage = BASE_DOMAIN + "/logo.png";
     ogType = "website";
+    h1 = pageTitle.replace(" - Free HD on p0rn", "").replace(" - Free HD XXX on p0rn", "");
+    bodyText = pageDesc;
   }
 
-  // Absolute image URL for WhatsApp (must be https)
   if (pageImage && pageImage.startsWith("//")) pageImage = "https:" + pageImage;
   if (pageImage && pageImage.startsWith("/")) pageImage = BASE_DOMAIN + pageImage;
 
-    // Safe SSR tag replacements for WhatsApp, Instagram, Telegram, Twitter & Googlebot
+  // Inject SSR-visible content so bots see more than "Loading…"
+  const ssrBlock =
+    '<div id="ssrContent" data-ssr="1">' +
+    "<h1>" + escapeHtml(h1) + "</h1>" +
+    "<p>" + escapeHtml(bodyText) + "</p>" +
+    ssrExtra +
+    '<nav aria-label="Popular"><a href="/">Home</a> · <a href="/category/indian">Indian</a> · <a href="/category/milf">MILF</a> · <a href="/category/amateur">Amateur</a> · <a href="/search/free-porn">Free porn</a></nav>' +
+    "</div>";
+
+  html = html.replace(
+    /<main[^>]*id="mainContainer"[^>]*>[\s\S]*?<\/main>/,
+    '<main class="main-container" id="mainContainer">' + ssrBlock + "</main>"
+  );
+  // Fallback if main shape differs
+  if (!html.includes('id="ssrContent"')) {
+    html = html.replace(
+      /Loading videos…/,
+      escapeHtml(h1) + " — " + escapeHtml(bodyText)
+    );
+  }
+
   html = html
-    .replace(/<title id="pageTitle">[\s\S]*?<\/title>/, `<title id="pageTitle">${escapeHtml(pageTitle)}</title>`)
-    .replace(/<meta name="description" id="metaDescription" content="[\s\S]*?" \/>/, `<meta name="description" id="metaDescription" content="${escapeHtml(pageDesc)}" />`)
-    .replace(/<link rel="canonical" href="[\s\S]*?" id="canonicalUrl" \/>/, `<link rel="canonical" href="${escapeHtml(pageUrl)}" id="canonicalUrl" />`)
-    .replace(/<link rel="image_src" href="[\s\S]*?" \/>/, `<link rel="image_src" href="${escapeHtml(pageImage)}" />`)
-    .replace(/<meta property="og:type" content="[\s\S]*?" id="ogType" \/>/, `<meta property="og:type" content="${escapeHtml(ogType)}" id="ogType" />`)
-    .replace(/<meta property="og:title" content="[\s\S]*?" id="ogTitle" \/>/, `<meta property="og:title" content="${escapeHtml(pageTitle)}" id="ogTitle" />`)
-    .replace(/<meta property="og:description" content="[\s\S]*?" id="ogDesc" \/>/, `<meta property="og:description" content="${escapeHtml(pageDesc)}" id="ogDesc" />`)
-    .replace(/<meta property="og:image" content="[\s\S]*?" id="ogImage" \/>/, `<meta property="og:image" content="${escapeHtml(pageImage)}" id="ogImage" />`)
-    .replace(/<meta property="og:image:secure_url" content="[\s\S]*?" id="ogImageSecure" \/>/, `<meta property="og:image:secure_url" content="${escapeHtml(pageImage)}" id="ogImageSecure" />`)
-    .replace(/<meta property="og:image:width" content="[\s\S]*?" id="ogImageWidth" \/>/, `<meta property="og:image:width" content="1200" id="ogImageWidth" />`)
-    .replace(/<meta property="og:image:height" content="[\s\S]*?" id="ogImageHeight" \/>/, `<meta property="og:image:height" content="630" id="ogImageHeight" />`)
-    .replace(/<meta property="og:url" content="[\s\S]*?" id="ogUrl" \/>/, `<meta property="og:url" content="${escapeHtml(pageUrl)}" id="ogUrl" />`)
-    .replace(/<meta name="twitter:title" content="[\s\S]*?" id="twTitle" \/>/, `<meta name="twitter:title" content="${escapeHtml(pageTitle)}" id="twTitle" />`)
-    .replace(/<meta name="twitter:description" content="[\s\S]*?" id="twDesc" \/>/, `<meta name="twitter:description" content="${escapeHtml(pageDesc)}" id="twDesc" />`)
-    .replace(/<meta name="twitter:image" content="[\s\S]*?" id="twImage" \/>/, `<meta name="twitter:image" content="${escapeHtml(pageImage)}" id="twImage" />`);
+    .replace(/<title id="pageTitle">[\s\S]*?<\/title>/, "<title id=\"pageTitle\">" + escapeHtml(pageTitle) + "</title>")
+    .replace(/<meta name="description" id="metaDescription" content="[\s\S]*?" \/>/, "<meta name=\"description\" id=\"metaDescription\" content=\"" + escapeHtml(pageDesc) + "\" />")
+    .replace(/<link rel="canonical" href="[\s\S]*?" id="canonicalUrl" \/>/, "<link rel=\"canonical\" href=\"" + escapeHtml(pageUrl) + "\" id=\"canonicalUrl\" />")
+    .replace(/<link rel="image_src"[^>]*\/?>/, "<link rel=\"image_src\" href=\"" + escapeHtml(pageImage) + "\" id=\"imageSrc\" />")
+    .replace(/<meta property="og:type" content="[\s\S]*?" id="ogType" \/>/, "<meta property=\"og:type\" content=\"" + escapeHtml(ogType) + "\" id=\"ogType\" />")
+    .replace(/<meta property="og:title" content="[\s\S]*?" id="ogTitle" \/>/, "<meta property=\"og:title\" content=\"" + escapeHtml(pageTitle) + "\" id=\"ogTitle\" />")
+    .replace(/<meta property="og:description" content="[\s\S]*?" id="ogDesc" \/>/, "<meta property=\"og:description\" content=\"" + escapeHtml(pageDesc) + "\" id=\"ogDesc\" />")
+    .replace(/<meta property="og:image" content="[\s\S]*?" id="ogImage" \/>/, "<meta property=\"og:image\" content=\"" + escapeHtml(pageImage) + "\" id=\"ogImage\" />")
+    .replace(/<meta property="og:image:secure_url" content="[\s\S]*?" id="ogImageSecure" \/>/, "<meta property=\"og:image:secure_url\" content=\"" + escapeHtml(pageImage) + "\" id=\"ogImageSecure\" />")
+    .replace(/<meta property="og:image:width" content="[\s\S]*?" id="ogImageWidth" \/>/, "<meta property=\"og:image:width\" content=\"1200\" id=\"ogImageWidth\" />")
+    .replace(/<meta property="og:image:height" content="[\s\S]*?" id="ogImageHeight" \/>/, "<meta property=\"og:image:height\" content=\"630\" id=\"ogImageHeight\" />")
+    .replace(/<meta property="og:url" content="[\s\S]*?" id="ogUrl" \/>/, "<meta property=\"og:url\" content=\"" + escapeHtml(pageUrl) + "\" id=\"ogUrl\" />")
+    .replace(/<meta name="twitter:title" content="[\s\S]*?" id="twTitle" \/>/, "<meta name=\"twitter:title\" content=\"" + escapeHtml(pageTitle) + "\" id=\"twTitle\" />")
+    .replace(/<meta name="twitter:description" content="[\s\S]*?" id="twDesc" \/>/, "<meta name=\"twitter:description\" content=\"" + escapeHtml(pageDesc) + "\" id=\"twDesc\" />")
+    .replace(/<meta name="twitter:image" content="[\s\S]*?" id="twImage" \/>/, "<meta name=\"twitter:image\" content=\"" + escapeHtml(pageImage) + "\" id=\"twImage\" />");
+
+  // Force all hardcoded non-www host strings in template toward canonical host
+  html = html.replace(/https:\/\/p0rn\.online/g, BASE_DOMAIN);
 
   if (videoObject) {
     const videoSchema = {
@@ -578,17 +637,17 @@ async function serveHtml(req, res, u) {
       "@graph": [
         {
           "@type": "Organization",
-          "@id": `${BASE_DOMAIN}/#organization`,
+          "@id": BASE_DOMAIN + "/#organization",
           "name": "p0rn",
-          "url": `${BASE_DOMAIN}/`,
+          "url": BASE_DOMAIN + "/",
           "logo": {
             "@type": "ImageObject",
-            "url": `${BASE_DOMAIN}/logo.png`,
-            "width": 1671,
-            "height": 941,
+            "url": BASE_DOMAIN + "/logo.png",
+            "width": 1200,
+            "height": 630,
             "caption": "p0rn Logo"
           },
-          "image": `${BASE_DOMAIN}/logo.png`
+          "image": BASE_DOMAIN + "/logo.png"
         },
         {
           "@type": "VideoObject",
@@ -598,25 +657,24 @@ async function serveHtml(req, res, u) {
           "uploadDate": new Date().toISOString(),
           "embedUrl": videoObject.embedUrl || "",
           "contentUrl": videoObject.contentUrl,
-          "publisher": {
-            "@id": `${BASE_DOMAIN}/#organization`
-          }
+          "publisher": { "@id": BASE_DOMAIN + "/#organization" }
         }
       ]
     };
     html = html.replace(
       /<script type="application\/ld\+json" id="schemaStructuredData">[\s\S]*?<\/script>/,
-      `<script type="application/ld+json" id="schemaStructuredData">\n  ${JSON.stringify(videoSchema, null, 2)}\n  </script>`
+      '<script type="application/ld+json" id="schemaStructuredData">\n  ' + JSON.stringify(videoSchema, null, 2) + "\n  </script>"
     );
   }
 
   res.writeHead(200, {
     "Content-Type": "text/html; charset=utf-8",
-    "Cache-Control": "public, max-age=60",
+    "Cache-Control": vId ? "public, max-age=300" : "public, max-age=60",
     "X-Content-Type-Options": "nosniff"
   });
   res.end(html);
 }
+
 
 const server = http.createServer(async (req, res) => {
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
@@ -685,7 +743,54 @@ const server = http.createServer(async (req, res) => {
 
   if (u.pathname.startsWith("/api/")) return json(res, 404, { code: 0, msg: "Not found" });
 
+  // Prefer www host (301 non-www → www when Host header is bare domain)
+  const host = String(req.headers.host || "").toLowerCase();
+  if (host === "p0rn.online") {
+    res.writeHead(301, { Location: "https://www.p0rn.online" + u.pathname + (u.search || "") });
+    return res.end();
+  }
+
   let rel = decodeURIComponent(u.pathname);
+
+  // Legacy query → path 301s
+  if ((rel === "/" || rel === "/index.html") && (u.searchParams.get("v") || u.searchParams.get("video"))) {
+    const id = u.searchParams.get("v") || u.searchParams.get("video");
+    res.writeHead(301, { Location: "/video/" + encodeURIComponent(id) });
+    return res.end();
+  }
+  if ((rel === "/" || rel === "/index.html") && (u.searchParams.get("collection") || u.searchParams.get("cat"))) {
+    const cid = u.searchParams.get("collection") || u.searchParams.get("cat");
+    const name = CATEGORY_NAMES[cid] || "collection";
+    res.writeHead(301, { Location: "/category/" + slugify(name) });
+    return res.end();
+  }
+  if ((rel === "/" || rel === "/index.html") && (u.searchParams.get("wd") || u.searchParams.get("q"))) {
+    const term = (u.searchParams.get("wd") || u.searchParams.get("q") || "").trim();
+    res.writeHead(301, { Location: "/search/" + encodeURIComponent(term.replace(/\s+/g, "-")) });
+    return res.end();
+  }
+
+  // Path routes
+  const videoMatch = rel.match(/^\/video\/([^/]+)(?:\/([^/]+))?\/?$/);
+  if (videoMatch) {
+    return serveHtml(req, res, u, { vId: decodeURIComponent(videoMatch[1]) });
+  }
+  const catMatch = rel.match(/^\/category\/([^/]+)\/?$/);
+  if (catMatch) {
+    const slug = decodeURIComponent(catMatch[1]).toLowerCase();
+    const colId = CATEGORY_SLUGS[slug] || null;
+    const catName = Object.keys(CATEGORY_NAMES).find((k) => slugify(CATEGORY_NAMES[k]) === slug);
+    return serveHtml(req, res, u, {
+      colId: colId || catName || slug,
+      catName: (catName && CATEGORY_NAMES[catName]) || slug.replace(/-/g, " ")
+    });
+  }
+  const searchMatch = rel.match(/^\/search\/([^/]+)\/?$/);
+  if (searchMatch) {
+    const wd = decodeURIComponent(searchMatch[1]).replace(/-/g, " ");
+    return serveHtml(req, res, u, { wd });
+  }
+
   if (rel === "/" || rel === "" || rel === "/index.html") {
     return serveHtml(req, res, u);
   }
